@@ -5,7 +5,7 @@ data_dir <- "C:/Study/ACTL4001/Assignment/Data"
 #### Setup ####
 # Packages
 packages <- c("openxlsx", "data.table", "ggplot2", "zoo", "corrplot",
-              "gridExtra", "fitdistrplus")
+              "gridExtra", "fitdistrplus", "actuar", "gamlss")
 install.packages(packages)
 
 library("openxlsx")
@@ -15,9 +15,18 @@ library("zoo")
 library("corrplot")
 library("gridExtra")
 library("fitdistrplus")
+library("actuar")
+library("gamlss")
+
 # Parameters defined below
 long_term_inflation <- 0.020
-
+temp_housing <- c(1920, 1829, 1925, 1639, 1588, 1653)
+demand_push_ceiling <- 0.5
+home_contents_min <- 0.4
+home_contents_max <- 0.7
+splits <- c("minor", "medium", "major")
+# home_contents <- seq(0.4, 0.7, 0.05)
+exc_rate <- 1.321
 
 #### Data read ####
 hazard <- read.xlsx(file.path(data_dir, "2023-student-research-hazard-event-data.xlsx"),
@@ -36,17 +45,22 @@ raf <- read.xlsx(file.path(data_dir, "2023-student-research-emissions.xlsx"),
                  sheet = "Model",
                  rows = 20:34, cols = 20:23)
 
+mmm <- read.xlsx(file.path(data_dir, "Minor, Medium, Major Risk.xlsx"),
+                 sheet = "Summary Sheet w ranks",
+                 rows = 4:55, cols = 16:19)
+
 hazard <- as.data.table(hazard)
 dem <- as.data.table(dem)
 eco <- as.data.table(eco)
 raf <- as.data.table(raf)
+mmm <- as.data.table(mmm)
 
 #### Data clean ####
 hazard_edit <- copy(hazard)
 hazard_edit[,Region := as.factor(Region)]
 
 table(hazard_edit$Hazard.Event)
-hazard_edit[Hazard.Event == "Severe Storm/Thunder Storm - Wind", Hazard.Event := "Severe Storm/Thunder Storm/Wind"]
+hazard_edit[Hazard.Event == "Severe Storm/Thunder Storm - Wind", Hazard.Event := "Severe Storm/Thunder Storm/ Wind"]
 
 
 eco_edit <- copy(eco) #should use "copy" when duplicating/making a copy of data.tables
@@ -95,15 +109,17 @@ ggplot(hazard_edit, aes(x = Year, col = Region)) +
   geom_line(stat = "count") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-hazard_edit[,.(avg_dam = mean(prop_dam_inf)), by = "Region"]
+hazard_edit[,avg_dam_reg := mean(prop_dam_inf), by = c("Region", "yq")]
+
 for (reg in c("1","2","3","4","5","6")) {
   dam_by_region_plot <- ggplot(hazard_edit[Region == reg,], aes(x = yq, y = prop_dam_inf)) +
     geom_line() +
     ylim(0,1000000)
   print(dam_by_region_plot)
 }
+
 for (reg in c("1","2","3","4","5","6")) {
-  dam_by_region_plot <- ggplot(hazard_edit[Region == reg,], aes(x = yq, y = avg_dam)) +
+  dam_by_region_plot <- ggplot(hazard_edit[Region == reg,], aes(x = yq, y = avg_dam_reg)) +
     geom_line() +
     ylim(0,1000000)
   print(dam_by_region_plot)
@@ -141,9 +157,6 @@ acs_by_freq_simple <- acs_by_freq[, .(mean_acs_again = mean(mean_acs)), by = N]
 acs_by_freq_simple[order(N),]
 plot(acs_by_freq_simple) #no clear relationship
 
-# most frequent events by year for each region
-# histogram for each event for each region
-# quantile analysis
 
 # Prop_dam_inf by region, by hazard
 plot_list <- list()
@@ -164,40 +177,20 @@ write.xlsx(hazard_edit[,.(Region, Hazard.Event, Quarter, Year, Duration, Fatalit
            file.path(data_dir, "inf_hazard_event_data.xlsx"),
            sheetName = "inf_data")
 
-#### Minor/medium/major or small/medium/large split ####
+#### Farah x Waddah excel analysis ####
+
+#### Minor/medium/major split ####
 haz_mod_data <- copy(hazard_edit)
-#** Replace with Farah/Waddah definitions
 
-# Placeholder* parameters defined below
-# cost_fat <- 500000
-# cost_inj <- 50000
+haz_mod_data <- merge(haz_mod_data, mmm[,.(Group, `Most.to.Least.Hazardous.(Based.on.weightings)`)], by.x = c("Hazard.Event"), by.y = c("Most.to.Least.Hazardous.(Based.on.weightings)"), all.x = TRUE)
+haz_mod_data[is.na(Group)] #check - none!
 
-# Combined cost (sum_hazard)
-# haz_mod_data[, sum_hazard := Fatalities * cost_fat / cumulative_inf + Injuries * cost_inj / cumulative_inf + prop_dam_inf]
 haz_mod_data[, sum_hazard := prop_dam_inf]
 
-# Parameters defined below
-splits <- c("small", "medium", "large")
-small_max <- quantile(haz_mod_data$sum_hazard, 0.8)
-med_max <- quantile(haz_mod_data$sum_hazard, 0.9)
-
-# Label data
-event_group_fun<- function(x){
-  if (x <small_max) {
-    return('small')
-  } else if (x > small_max  &x <= med_max) {
-    return('medium')
-  } else {
-    return('large')
-  }
-}
-
-haz_mod_data$event_group <- sapply(haz_mod_data$sum_hazard,event_group_fun)
-
 haz_mod_data$post2005 <- 0
-haz_mod_data[Year >= 2005,post2005 := 1]
+haz_mod_data[Year >= 2005, post2005 := 1]
 
-#### Diagnostic graphs ####
+#### Diagnostic graphs for frequency/severity fits ####
 # Graphs of sum_hazard by split, by region
 plot_list <- list()
 for (reg in c("1","2","3","4","5","6")) {
@@ -208,7 +201,7 @@ for (reg in c("1","2","3","4","5","6")) {
 
   for (ind in c(1,2,3)) {
     split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & event_size == split,], aes(x = sum_hazard)) +
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = sum_hazard)) +
       geom_histogram() +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       ggtitle(paste0("Region ",reg," - ", split))
@@ -227,7 +220,7 @@ for (reg in c("1","2","3","4","5","6")) {
 
   for (ind in c(1,2,3)) {
     split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & event_size == split,], aes(x = Year, y = sum_hazard)) +
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = sum_hazard)) +
       geom_col() +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       ggtitle(paste0("Region ",reg," - ", split))
@@ -240,8 +233,8 @@ for (reg in c("1","2","3","4","5","6")) {
 haz_mod_data[, avg_sum_hazard_q := mean(sum_hazard), by = c("yq", "Region")]
 haz_mod_data[, avg_sum_hazard_y := mean(sum_hazard), by = c("Year", "Region")]
 
-haz_mod_data[, avg_sum_hazard_qg := mean(sum_hazard), by = c("yq", "Region", "event_size")]
-haz_mod_data[, avg_sum_hazard_yg := mean(sum_hazard), by = c("Year", "Region", "event_size")]
+haz_mod_data[, avg_sum_hazard_qg := mean(sum_hazard), by = c("yq", "Region", "Group")]
+haz_mod_data[, avg_sum_hazard_yg := mean(sum_hazard), by = c("Year", "Region", "Group")]
 
 # Column graph of avg_sum_hazard by year, by region
 plot_list <- list()
@@ -253,7 +246,7 @@ for (reg in c("1","2","3","4","5","6")) {
 
   for (ind in c(1,2,3)) {
     split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & event_size == split,], aes(x = Year, y = avg_sum_hazard_qg)) +
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = avg_sum_hazard_qg)) +
       geom_col() +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       ggtitle(paste0("Region ",reg," - ", split))
@@ -273,7 +266,7 @@ for (reg in c("1","2","3","4","5","6")) {
 
   for (ind in c(1,2,3)) {
     split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & event_size == split,], aes(x = avg_sum_hazard_yg)) +
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = avg_sum_hazard_yg)) +
       geom_histogram() +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       ggtitle(paste0("Region ",reg," - ", split))
@@ -292,7 +285,7 @@ for (reg in c("1","2","3","4","5","6")) {
 
   for (ind in c(1,2,3)) {
     split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & event_size == split,], aes(x = avg_sum_hazard_qg)) +
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = avg_sum_hazard_qg)) +
       geom_histogram() +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       ggtitle(paste0("Region ",reg," - ", split))
@@ -311,7 +304,7 @@ for (reg in c("1","2","3","4","5","6")) {
 
   for (ind in c(1,2,3)) {
     split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & event_size == split,], aes(x = sum_hazard)) +
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = sum_hazard)) +
       geom_histogram() +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       ggtitle(paste0("Region ",reg," - ", split))
@@ -330,7 +323,7 @@ for (reg in c("1","2","3","4","5","6")) {
 
   for (ind in c(1,2,3)) {
     split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & event_size == split,], aes(x = Year, y = sum_hazard)) +
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = sum_hazard)) +
       geom_col() +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       ggtitle(paste0("Region ",reg," - ", split))
@@ -340,10 +333,15 @@ for (reg in c("1","2","3","4","5","6")) {
 }
 
 
-#### Check existing trends in notifications by split ####
-# why the ~ 0 claims ~ Year 2000?
-# why the jump in claims in the recent 20 years?
-## edit to definition of regions implied by reduction in region 1 notifications and sudden hike in other region notifications
+
+
+#### Predict number of events for each split, by region ####
+# Check existing trends in notifications by split
+## why the ~ 0 claims ~ Year 2000?
+## why the jump in claims in the recent 20 years?
+## edit to definition of regions may explain reduction in region 1 notifications and sudden hike in other region notifications
+
+# Frequency plots by year, by region and mmm group
 plot_list <- list()
 for (reg in c("1","2","3","4","5","6")) {
   plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = Year)) +
@@ -353,7 +351,7 @@ for (reg in c("1","2","3","4","5","6")) {
 
   for (ind in c(1,2,3)) {
     split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & event_size == split,], aes(x = Year)) +
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year)) +
       geom_bar(stat = "count") +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       ggtitle(paste0("Region ",reg," - ", split, " count"))
@@ -362,9 +360,8 @@ for (reg in c("1","2","3","4","5","6")) {
   grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
 }
 
-# take 2020 notifications as is or take average of past ~20 years of notifications as 2020 notifications for SSP model?
 
-#### Predict number of events for each split, by region ####
+# Confrim variation in experience increased considerably following 2005
 sd(haz_mod_data[post2005 == FALSE, .N, yq]$N)
 # [1] 10.39263
 sd(haz_mod_data[post2005 == TRUE, .N, yq]$N) #lots more variation here
@@ -372,12 +369,13 @@ sd(haz_mod_data[post2005 == TRUE, .N, yq]$N) #lots more variation here
 sd(haz_mod_data[, .N, yq]$N)
 #[1] 15.89482
 
-# Method 1 - Take average of last 10 years
+
+# Method 1 - Take average of last 10 years - 10 chosen arbitrarily
 freq_list <- list()
 for (reg in c("1","2","3","4","5","6")) {
   reg_freq_list <- c()
   for (group in splits) {
-    split_freq <- mean(haz_mod_data[Region == reg & Year >= 2010 & event_group == group, .N, Year]$N)
+    split_freq <- mean(haz_mod_data[Region == reg & Year >= 2010 & Group == group, .N, Year]$N)
     reg_freq_list <- c(reg_freq_list, ifelse(is.na(split_freq),0, split_freq))
   }
   print(reg_freq_list)
@@ -388,105 +386,137 @@ write.xlsx(reg_freq_list,
            sheetName = "freq")
 
 # Method 2 - fit distribution
-freq.fit.pois <- fitdist(haz_mod_data[, .N, yq]$N, "pois" , method = "mme")
+data_freq <- merge(haz_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
+data_freq[,N := ifelse(is.na(N), 0, N)]
+data_freq.1 <- merge(haz_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
+data_freq.1[,N := ifelse(is.na(N), 0, N)]
+
+
+# poisson
+freq.fit.pois <- fitdist(data_freq$N, "pois" , method = "mme")
+plot(freq.fit.pois) #overdispersed
+freq.fit.pois <- fitdist(data_freq.1$N, "pois" , method = "mme")
 plot(freq.fit.pois) #overdispersed
 
-freq.fit.nb <- fitdist(haz_mod_data[, .N, Year]$N, "nbinom", method = "mme") #'arg' should be one of “Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
-plot(freq.fit.nb) #better, and mme better than mse
 
 # nb
-freq.fit.nb <- fitdist(haz_mod_data[, .N, yq]$N, "nbinom", method = "mme") #'arg' should be one of “Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
+freq.fit.nb <- fitdist(data_freq$N, "nbinom", method = "mme")
 plot(freq.fit.nb)
 freq.fit.nb$aic
 freq.fit.nb$bic
 prob.0 <- freq.fit.nb$estimate[1]/(freq.fit.nb$estimate[1] + freq.fit.nb$estimate[2])
 
-freq.fit.nb.1 <- fitdist(haz_mod_data[post2005 == TRUE, .N, yq]$N, "nbinom", method = "mme") #'arg' should be one of “Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
+freq.fit.nb.1 <- fitdist(data_freq.1$N, "nbinom", method = "mme")
 plot(freq.fit.nb.1)
 freq.fit.nb.1$aic
 freq.fit.nb.1$bic
 prob.1 <- freq.fit.nb.1$estimate[1]/(freq.fit.nb.1$estimate[1] + freq.fit.nb.1$estimate[2])
 
-#exp better for overall and post-2005 experience
-freq.fit.exp <- fitdist(haz_mod_data[, .N, yq]$N, "exp", method = "mme") #'arg' should be one of “Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
+
+# exp - better for overall and post-2005 experience just based off aic/bic
+freq.fit.exp <- fitdist(data_freq$N, "exp", method = "mme")
 plot(freq.fit.exp)
 freq.fit.exp$aic
 freq.fit.exp$bic
 
-freq.fit.exp.1 <- fitdist(haz_mod_data[post2005 == TRUE, .N, yq]$N, "exp", method = "mme") #'arg' should be one of “Nelder-Mead”, “BFGS”, “CG”, “L-BFGS-B”, “SANN”, “Brent”
+freq.fit.exp.1 <- fitdist(data_freq.1$N, "exp", method = "mme")
 plot(freq.fit.exp.1)
 freq.fit.exp.1$aic
 freq.fit.exp.1$bic
 
 
+# qexp(0.10, freq.fit.exp.1$estimate[1])
+# qexp(0.50, freq.fit.exp.1$estimate[1])
+# qexp(0.90, freq.fit.exp.1$estimate[1])
 
-#### Predict acs of events for each split, by region ####
+# Similar distribution for nil claims
+
+data_nil <- merge(haz_mod_data[sum_hazard == 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
+data_nil[,N := ifelse(is.na(N), 0, N)]
+data_nil.1 <- merge(haz_mod_data[post2005 == TRUE & sum_hazard == 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
+data_nil.1[,N := ifelse(is.na(N), 0, N)]
+
+nil.fit.nb <- fitdist(data_nil$N, "nbinom", method = "mme" )
+plot(nil.fit.nb)
+nil.fit.nb$aic
+nil.fit.nb$bic
+
+# exp scores better
+nil.fit.exp <- fitdist(data_nil$N, "exp", method = "mme" )
+plot(nil.fit.exp)
+nil.fit.exp$aic
+nil.fit.exp$bic
+
+
+#### Predict avg prop damage of events for each split, by region ####
 # Not offset by populations of regions bc insufficient information provided
 # We still assume a relationship between region and acs in projections.
-
-# count distribution for nil claims
-haz_mod_data[sum_hazard == 0, .N, Year] #assume follow a normal distribution
-nil.fit.norm <- fitdist(haz_mod_data[sum_hazard == 0, .N, Year]$N, "norm" , method = "mse")
-plot(nil.fit.norm)
-nil.fit.exp <- fitdist(haz_mod_data[sum_hazard == 0, .N, Year]$N, "exp", method = "mse" )
-plot(nil.fit.exp)
-nil.fit.poi <- fitdist(haz_mod_data[sum_hazard == 0, .N, Year]$N, "pois", method = "mse" )
-plot(nil.fit.poi)
-
-
 event_names2 <- paste0("event_", sub(" ", "_", event_names))
 colSums(haz_mod_data[,..event_names2])
-# variables <- c("Duration", "Fatalities", "Injuries", event_names2)
-# form <- paste(variables, collapse = '+')
 
 # should we not insure for fogs, landslides? Only 1 event
 # Severe storms and thunder storms exactly correlated. Thunder storms removed
 # Hurricanes and tropical storms exactly correlated. Tropical storms removed
 # Only hurricanes and tropical storms have significantly non-0 correlation with sum_hazard
-event_names2_sh <- c(event_names2, "sum_hazard")
+event_names2_sh <- c(event_names2, "sum_hazard", "Quarter")
 correlation <- cor(haz_mod_data[,..event_names2_sh])
 corrplot(correlation)
 
+# There doesn't seem to be a clear trend for sum_hazard across years. Use data from all years
+# plot(haz_mod_data[sum_hazard > 0 & Region == 1,mean(sum_hazard), Year]$V1)
+# plot(haz_mod_data[sum_hazard > 0 & Region == 2,mean(sum_hazard), Year]$V1)
+# plot(haz_mod_data[sum_hazard > 0 & Region == 3,mean(sum_hazard), Year]$V1)
+# plot(haz_mod_data[sum_hazard > 0 & Region == 4,mean(sum_hazard), Year]$V1)
+# plot(haz_mod_data[sum_hazard > 0 & Region == 5,mean(sum_hazard), Year]$V1)
+# plot(haz_mod_data[sum_hazard > 0 & Region == 6,mean(sum_hazard), Year]$V1)
 
-fit.weibull <- fitdist(haz_mod_data[sum_hazard > 0]$sum_hazard, "weibull")
 
 
-glm_test1 <- glm(formula = sum_hazard ~ Injuries + event_Hurricane,
-                 family = Gamma,
-                 data = haz_mod_data[sum_hazard > 0,],
-                 offset = NULL,
-                 control = list(), model = TRUE, method = "glm.fit"
-)
-summary(glm_test1)
+# data_sev <- haz_mod_data[sum_hazard > 0,mean(sum_hazard), c("Region", "Year")]
+data_sev <- haz_mod_data[sum_hazard > 0,]
 
-# remove 1989
-haz_mod_data_simple <- haz_mod_data[!(Year == 1989 & Hazard.Event == "Hurricane/Tropical Storm"),]
+avg.dam.fit.gam <- fitdist(data_sev$sum_hazard, "gamma", method = "mme")
+plot(avg.dam.fit.gam) #off
 
-# backwards/forwards step
+avg.dam.fit.weibull <- fitdist(data_sev$sum_hazard, "weibull", method = "mse")
+plot(avg.dam.fit.weibull) #giving error
 
-glm_test2 <- glm(formula = sum_hazard ~ Injuries + event_Hurricane + event_Severe_Storm + event_Flooding + event_Drought,
-                 family = Gamma,
-                 data = haz_mod_data_simple[sum_hazard > 0,],
-                 offset = NULL,
-                 control = list(), model = TRUE, method = "glm.fit"
-)
-summary(glm_test2)
+avg.dam.fit.lnorm <- fitdist(data_sev$sum_hazard, "lnorm", method = "mse")
+plot(avg.dam.fit.lnorm) #worse fit at tails, better fit up to $3M
 
-glm_test3 <- glm(formula = sum_hazard ~ Region + Injuries + event_Hurricane + event_Severe_Storm + event_Flooding + event_Drought,
-                 family = Gamma,
-                 data = haz_mod_data_simple[sum_hazard > 0,],
-                 offset = NULL,
-                 control = list(), model = TRUE, method = "glm.fit"
-)
-summary(glm_test3)
+avg.dam.fit.ig <- fitdist(data_sev$sum_hazard, "invgauss", start = list(mean = 0.5, shape = 5), method = "mse")
+plot(avg.dam.fit.ig) #predicts single value - figure out why
 
-glm_test4 <- glm(formula = sum_hazard ~ Injuries + event_Hurricane + event_Severe_Storm + event_Flooding + event_Drought,
-                 family = Gamma,
-                 data = haz_mod_data_simple[Region == 2 & sum_hazard > 0,],
-                 offset = NULL,
-                 control = list(), model = TRUE, method = "glm.fit"
-)
-summary(glm_test4)
 
+#look at qqplots on limited scales
+qplot(sample = quantile(data_sev$sum_hazard, p = ppoints(100)), geom = 'blank') +
+  stat_qq(distribution = qweibull, dparams = avg.dam.fit.weibull$estimate) +
+  geom_abline(intercept = 0, slope = 1, size = 0.5) +
+  xlim(0, 10000000) +
+  ylim(0, 10000000)
+
+qplot(sample = quantile(data_sev$sum_hazard, p = ppoints(100)), geom = 'blank') +
+  stat_qq(distribution = qlnorm, dparams = avg.dam.fit.lnorm$estimate) +
+  geom_abline(intercept = 0, slope = 1, size = 0.5) +
+  xlim(0, 10000000) +
+  ylim(0, 10000000)
+
+qplot(sample = quantile(data_sev$sum_hazard, p = ppoints(100)), geom = 'blank') +
+  stat_qq(distribution = qinvgauss, dparams = avg.dam.fit.ig$estimate) +
+  geom_abline(intercept = 0, slope = 1, size = 0.5) +
+  xlim(0, 10000000) +
+  ylim(0, 10000000)
+
+
+sev_glm <- gamlss(sum_hazard ~ Region + Group, family = LOGNO(mu.link = ""), data = data_sev)
+summary(sev_glm)
+
+# each_group_reg_sev <- CJ(1:6,splits)
+# colnames(each_group_reg_sev) <- c("Region", "Group")
+# predict(sev_glm, newdata = each_group_reg_sev, type = "response", se.fit = FALSE)
+
+predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
+
+# total cost for involuntary relocation
 
 
