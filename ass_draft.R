@@ -424,10 +424,31 @@ plot(freq.fit.exp.1)
 freq.fit.exp.1$aic
 freq.fit.exp.1$bic
 
-
 # qexp(0.10, freq.fit.exp.1$estimate[1])
 # qexp(0.50, freq.fit.exp.1$estimate[1])
 # qexp(0.90, freq.fit.exp.1$estimate[1])
+
+freq_skeleton <- CJ(as.factor(1:6),splits, seq(2006,2020))
+colnames(freq_skeleton) <- c("Region", "Group", "Year")
+data_freq_groups <- merge(haz_mod_data[post2005 == TRUE & sum_hazard > 0, .N, c("Region", "Group", "Year")], freq_skeleton, by = c("Region", "Group", "Year"), all.y = TRUE)
+data_freq_groups[,N := ifelse(is.na(N), 0, N)]
+
+freq_glm <-gamlss(N ~ Region + Group, family = EXP, data = data_freq_groups)
+summary(freq_glm)
+
+#fix below code for frequency
+# gamlss(sum_hazard ~ Region + Group, family = EXP, data = data_freq.1)
+# summary(freq_glm)
+#
+# sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
+# sev_results <- cbind(data_sev, "fit_sev" = exp(sev_results$fit), "fit_sev_se" = exp(sev_results$se.fit))
+#
+# tot_freq_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
+#
+# write.xlsx(tot_freq_results_summ,
+#            file.path(data_dir, "freq_sev_results.xlsx"),
+#            sheetName = "tot_freq")
+
 
 # Similar distribution for nil claims
 
@@ -515,8 +536,20 @@ summary(sev_glm)
 # colnames(each_group_reg_sev) <- c("Region", "Group")
 # predict(sev_glm, newdata = each_group_reg_sev, type = "response", se.fit = FALSE)
 
-predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
+sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
+sev_results <- cbind(data_sev, "fit_sev" = exp(sev_results$fit), "fit_sev_se" = exp(sev_results$se.fit))
 
-# total cost for involuntary relocation
+sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
 
 
+write.xlsx(sev_results_summ,
+           file.path(data_dir, "freq_sev_results.xlsx"),
+           sheetName = "sev")
+
+
+#### Temp housing inflated costs ####
+
+
+write.xlsx(hazard_edit[,.(Region, Hazard.Event, Quarter, Year, Duration, Fatalities, Injuries, prop_dam_inf)],
+           file.path(data_dir, "inf_hazard_event_data.xlsx"),
+           sheetName = "inf_data")
