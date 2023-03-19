@@ -192,7 +192,7 @@ haz_mod_data[Year >= 2005, post2005 := 1]
 
 #### Major Data - distribution fitting
 MajorHazard <- subset(haz_mod_data, Group == "major" & Property.Damage > 0)
-plotdist(MajorHazard$Property.Damage, histo = TRUE, demp = TRUE)
+plotdist(MajorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
 
 MajHaz.Sev.ln <- fitdist(MajorHazard$prop_dam_inf, "lnorm", method = "mme") #not the best but a better fit
 MajHaz.Sev.nb <- fitdist(MajorHazard$prop_dam_inf, "nbinom", method = "mme") #very bad fit
@@ -200,6 +200,13 @@ MajHaz.Sev.exp <- fitdist(MajorHazard$prop_dam_inf, "exp", method = "mme") #very
 MajHaz.Sev.gamma <- fitdist(MajorHazard$prop_dam_inf, "gamma", method = "mme") #not the best but a better fit
 MajHaz.Sev.pareto <- fitdist(MajorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) ## one of the better fits
 MajHaz.Sev.weibull <- fitdist(MajorHazard$prop_dam_inf, "weibull") #one of the better fits
+
+plot(MajHaz.Sev.ln)
+##plot(MajHaz.Sev.nb) #doesn't load LOL, do not use this code
+plot(MajHaz.Sev.exp)
+plot(MajHaz.Sev.gamma)
+plot(MajHaz.Sev.pareto)
+plot(MajHaz.Sev.weibull)
 
         #graphical analysis
 par(mfrow = c(2,2))
@@ -213,6 +220,26 @@ gofstat(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, Maj
 
 #### Medium Data
 MediumHazard <- subset(haz_mod_data, Group == "medium" & Property.Damage > 0)
+plotdist(MediumHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
+
+MedHaz.Sev.ln <- fitdist(MediumHazard$prop_dam_inf, "lnorm", method = "mme") 
+MedHaz.Sev.nb <- fitdist(MediumHazard$prop_dam_inf, "nbinom", method = "mme") 
+MedHaz.Sev.exp <- fitdist(MediumHazard$prop_dam_inf, "exp", method = "mme") 
+MedHaz.Sev.gamma <- fitdist(MediumHazard$prop_dam_inf, "gamma", method = "mme")
+MedHaz.Sev.pareto <- fitdist(MediumHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) # best fit graphically
+MedHaz.Sev.weibull <- fitdist(MediumHazard$prop_dam_inf, "weibull") #one of the better fits
+
+plot(MedHaz.Sev.ln)
+##plot(MedHaz.Sev.nb) #doesn't load LOL, do not use this code
+plot(MedHaz.Sev.exp)
+plot(MedHaz.Sev.gamma)
+plot(MedHaz.Sev.pareto)
+plot(MedHaz.Sev.weibull)
+
+
+
+
+
 
 #### Minor Data 
 MinorHazard <- subset(haz_mod_data, Group == "minor" & Property.Damage > 0)
