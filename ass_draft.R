@@ -554,6 +554,92 @@ plot(nil.fit.exp)
 nil.fit.exp$aic
 nil.fit.exp$bic
 
+#### Amanda Check frequency
+# GOF Test for ALL
+gofstat(list(freq.fit.exp, freq.fit.nb), fitnames = c("exponential","negative binomial"))
+# filter for major medium and minor
+major_hazard_mod_data <- haz_mod_data[Group == 'major',]
+major_data_freq <- merge(major_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
+major_data_freq[,N := ifelse(is.na(N), 0, N)]
+major_data_freq.1 <- merge(major_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
+major_data_freq.1[,N := ifelse(is.na(N), 0, N)]
+
+medium_hazard_mod_data <- haz_mod_data[Group == 'medium',]
+medium_data_freq <- merge(medium_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
+medium_data_freq[,N := ifelse(is.na(N), 0, N)]
+medium_data_freq.1 <- merge(medium_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
+medium_data_freq.1[,N := ifelse(is.na(N), 0, N)]
+
+minor_hazard_mod_data <- haz_mod_data[Group == 'minor',]
+minor_data_freq <- merge(minor_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
+minor_data_freq[,N := ifelse(is.na(N), 0, N)]
+minor_data_freq.1 <- merge(minor_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
+minor_data_freq.1[,N := ifelse(is.na(N), 0, N)]
+
+#exp
+major.freq.fit.exp <- fitdist(major_data_freq$N, "exp", method = "mme")
+summary(major.freq.fit.exp)
+plot(major.freq.fit.exp)
+
+major.freq.fit.exp.1 <- fitdist(major_data_freq.1$N, "exp", method = "mme")
+plot(major.freq.fit.exp.1)
+summary(major.freq.fit.exp.1)
+
+medium.freq.fit.exp <- fitdist(medium_data_freq$N, "exp", method = "mme")
+summary(medium.freq.fit.exp)
+plot(medium.freq.fit.exp)
+
+medium.freq.fit.exp.1 <- fitdist(medium_data_freq.1$N, "exp", method = "mme")
+plot(medium.freq.fit.exp.1)
+summary(medium.freq.fit.exp.1)
+
+minor.freq.fit.exp <- fitdist(minor_data_freq$N, "exp", method = "mme")
+summary(minor.freq.fit.exp)
+plot(minor.freq.fit.exp)
+
+minor.freq.fit.exp.1 <- fitdist(minor_data_freq.1$N, "exp", method = "mme")
+plot(minor.freq.fit.exp.1)
+summary(minor.freq.fit.exp.1)
+
+#nb
+major.freq.fit.nb <- fitdist(major_data_freq$N, "nbinom", method = "mme")
+summary(major.freq.fit.nb)
+plot(major.freq.fit.nb)
+major.prob.0 <- major.freq.fit.nb$estimate[1]/(major.freq.fit.nb$estimate[1] + major.freq.fit.nb$estimate[2])
+
+major.freq.fit.nb.1 <- fitdist(major_data_freq.1$N, "nbinom", method = "mme")
+summary(major.freq.fit.nb.1)
+plot(major.freq.fit.nb.1)
+major.prob.1 <- major.freq.fit.nb.1$estimate[1]/(major.freq.fit.nb.1$estimate[1] + major.freq.fit.nb.1$estimate[2])
+
+medium.freq.fit.nb <- fitdist(medium_data_freq$N, "nbinom", method = "mme")
+summary(medium.freq.fit.nb)
+plot(medium.freq.fit.nb)
+medium.prob.0 <- medium.freq.fit.nb$estimate[1]/(medium.freq.fit.nb$estimate[1] + medium.freq.fit.nb$estimate[2])
+
+medium.freq.fit.nb.1 <- fitdist(medium_data_freq.1$N, "nbinom", method = "mme")
+plot(medium.freq.fit.nb.1)
+medium.prob.1 <- medium.freq.fit.nb.1$estimate[1]/(medium.freq.fit.nb.1$estimate[1] + medium.freq.fit.nb.1$estimate[2])
+
+minor.freq.fit.nb <- fitdist(minor_data_freq$N, "nbinom", method = "mme")
+summary(minor.freq.fit.nb)
+plot(minor.freq.fit.nb)
+minor.prob.0 <- minor.freq.fit.nb$estimate[1]/(minor.freq.fit.nb$estimate[1] + minor.freq.fit.nb$estimate[2])
+
+minor.freq.fit.nb.1 <- fitdist(minor_data_freq.1$N, "nbinom", method = "mme")
+plot(minor.freq.fit.nb.1)
+minor.prob.1 <- minor.freq.fit.nb.1$estimate[1]/(minor.freq.fit.nb.1$estimate[1] + minor.freq.fit.nb.1$estimate[2])
+
+#GOF Test major
+gofstat(list(major.freq.fit.exp, major.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
+
+#GOF Test medium
+gofstat(list(medium.freq.fit.exp, medium.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
+
+#GOF Test minor
+gofstat(list(minor.freq.fit.exp, minor.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
+
+#########################################
 
 #### Predict avg prop damage of events for each split, by region ####
 # Not offset by populations of regions bc insufficient information provided
