@@ -29,6 +29,7 @@ splits <- c("minor", "medium", "major")
 exc_rate <- 1.321
 
 #### Data read ####
+    #Waddah note: change working directory on mac, then remove "file.path(data_dir,)", and keep everything else the same
 hazard <- read.xlsx(file.path(data_dir, "2023-student-research-hazard-event-data.xlsx"),
                     sheet = "Hazard Data",
                     rows = 13:3379, cols = 2:9)
