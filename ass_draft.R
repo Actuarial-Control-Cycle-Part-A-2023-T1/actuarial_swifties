@@ -202,7 +202,7 @@ MajHaz.Sev.pareto <- fitdist(MajorHazard$prop_dam_inf, "pareto",start = list(sha
 MajHaz.Sev.weibull <- fitdist(MajorHazard$prop_dam_inf, "weibull") #one of the better fits
 
 plot(MajHaz.Sev.ln)
-##plot(MajHaz.Sev.nb) #doesn't load LOL, do not use this code
+  ##plot(MajHaz.Sev.nb) #doesn't load LOL, do not use this code
 plot(MajHaz.Sev.exp)
 plot(MajHaz.Sev.gamma)
 plot(MajHaz.Sev.pareto)
@@ -230,13 +230,21 @@ MedHaz.Sev.pareto <- fitdist(MediumHazard$prop_dam_inf, "pareto",start = list(sh
 MedHaz.Sev.weibull <- fitdist(MediumHazard$prop_dam_inf, "weibull") #one of the better fits
 
 plot(MedHaz.Sev.ln)
-##plot(MedHaz.Sev.nb) #doesn't load LOL, do not use this code
+  ##plot(MedHaz.Sev.nb) #doesn't load LOL, do not use this code
 plot(MedHaz.Sev.exp)
 plot(MedHaz.Sev.gamma)
 plot(MedHaz.Sev.pareto)
 plot(MedHaz.Sev.weibull)
 
+        #graphical analysis
+par(mfrow = c(2,2))
+denscomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+cdfcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+qqcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+ppcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
 
+        #Goodness of Fit Test
+gofstat(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
 
 
 
