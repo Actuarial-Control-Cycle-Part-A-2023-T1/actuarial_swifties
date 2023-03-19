@@ -190,14 +190,28 @@ haz_mod_data[, sum_hazard := prop_dam_inf]
 haz_mod_data$post2005 <- 0
 haz_mod_data[Year >= 2005, post2005 := 1]
 
-#### Major Data
-MajorHazard <- subset(haz_mod_data, Group == "major")
+#### Major Data - distribution fitting
+MajorHazard <- subset(haz_mod_data, Group == "major" & Property.Damage > 0)
+plotdist(MajorHazard$Property.Damage, histo = TRUE, demp = TRUE)
+
+MajHaz.Sev.ln <- fitdist(MajorHazard$prop_dam_inf, "lnorm", method = "mme") #not the best but a better fit
+MajHaz.Sev.nb <- fitdist(MajorHazard$prop_dam_inf, "nbinom", method = "mme") #very bad fit
+MajHaz.Sev.exp <- fitdist(MajorHazard$prop_dam_inf, "exp", method = "mme") #very bad fit
+MajHaz.Sev.gamma <- fitdist(MajorHazard$prop_dam_inf, "gamma", method = "mme") #not the best but a better fit
+MajHaz.Sev.pareto <- fitdist(MajorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) ## one of the better fits
+MajHaz.Sev.weibull <- fitdist(MajorHazard$prop_dam_inf, "weibull") #one of the better fits
+
+par(mfrow = c(2,2))
+denscomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+cdfcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+qqcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+ppcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
 
 #### Medium Data
-MediumHazard <- subset(haz_mod_data, Group == "medium")
+MediumHazard <- subset(haz_mod_data, Group == "medium" & Property.Damage > 0)
 
 #### Minor Data 
-MinorHazard <- subset(haz_mod_data, Group == "minor")
+MinorHazard <- subset(haz_mod_data, Group == "minor" & Property.Damage > 0)
 
 #### Diagnostic graphs for frequency/severity fits ####
 # Graphs of sum_hazard by split, by region
