@@ -190,6 +190,15 @@ haz_mod_data[, sum_hazard := prop_dam_inf]
 haz_mod_data$post2005 <- 0
 haz_mod_data[Year >= 2005, post2005 := 1]
 
+#### Major Data
+MajorHazard <- subset(haz_mod_data, Group == "major")
+
+#### Medium Data
+MediumHazard <- subset(haz_mod_data, Group == "medium")
+
+#### Minor Data 
+MinorHazard <- subset(haz_mod_data, Group == "minor")
+
 #### Diagnostic graphs for frequency/severity fits ####
 # Graphs of sum_hazard by split, by region
 plot_list <- list()
