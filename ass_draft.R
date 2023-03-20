@@ -548,8 +548,10 @@ write.xlsx(sev_results_summ,
 
 
 #### Temp housing inflated costs ####
-
+temp_housing_inf <- data.table(seq(2020, 2150, 10))
+temp_housing_inf <- cbind(temp_housing_inf, matrix(rep(temp_housing,14), nrow = 14, byrow = TRUE))
+colnames(temp_housing_inf) <- c("Year", as.factor(c(1:6)))
 
 write.xlsx(hazard_edit[,.(Region, Hazard.Event, Quarter, Year, Duration, Fatalities, Injuries, prop_dam_inf)],
-           file.path(data_dir, "inf_hazard_event_data.xlsx"),
-           sheetName = "inf_data")
+           file.path(data_dir, "inf_temp_housing_data.xlsx"),
+           sheetName = "inf_th")
