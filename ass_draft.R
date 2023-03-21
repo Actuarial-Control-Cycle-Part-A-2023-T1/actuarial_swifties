@@ -178,7 +178,6 @@ write.xlsx(hazard_edit[,.(Region, Hazard.Event, Quarter, Year, Duration, Fatalit
            file.path(data_dir, "inf_hazard_event_data.xlsx"),
            sheetName = "inf_data")
 
-#### Farah x Waddah excel analysis ####
 
 #### Minor/medium/major split ####
 haz_mod_data <- copy(hazard_edit)
@@ -422,6 +421,19 @@ gofstat(list(medium.freq.fit.exp, medium.freq.fit.nb), fitnames = c("exponential
 #GOF Test minor
 gofstat(list(minor.freq.fit.exp, minor.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
 
+# nb for all
+freq.fit.nb <- fitdist(data_freq$N, "nbinom", method = "mme")
+plot(freq.fit.nb)
+freq.fit.nb$aic
+freq.fit.nb$bic
+prob.0 <- freq.fit.nb$estimate[1]/(freq.fit.nb$estimate[1] + freq.fit.nb$estimate[2])
+
+freq.fit.nb.1 <- fitdist(data_freq.1$N, "nbinom", method = "mme")
+plot(freq.fit.nb.1)
+freq.fit.nb.1$aic
+freq.fit.nb.1$bic
+prob.1 <- freq.fit.nb.1$estimate[1]/(freq.fit.nb.1$estimate[1] + freq.fit.nb.1$estimate[2])
+
 #### Severity - distribution fitting ####
 MajorHazard <- subset(haz_mod_data, Group == "major" & Property.Damage > 0)
 plotdist(MajorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
@@ -528,6 +540,7 @@ ppcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllH
 #Goodness of Fit Test
 gofstat(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
 
+#########################################
 #### Predict number of events for each split, by region ####
 # Check existing trends in notifications by split
 ## why the ~ 0 claims ~ Year 2000?
@@ -554,7 +567,7 @@ for (reg in c("1","2","3","4","5","6")) {
 }
 
 
-# Confrim variation in experience increased considerably following 2005
+# Confirm variation in experience increased considerably following 2005
 sd(haz_mod_data[post2005 == FALSE, .N, yq]$N)
 # [1] 10.39263
 sd(haz_mod_data[post2005 == TRUE, .N, yq]$N) #lots more variation here
@@ -647,8 +660,6 @@ nil_results_summ <- unique(nil_results[,.(Region, Group, fit_freq, fit_freq_se)]
 #            file.path(data_dir, "freq_sev_results.xlsx"),
 #            sheetName = "nil_freq")
 
-#########################################
-
 #### Predict avg prop damage of events for each split, by region ####
 # Not offset by populations of regions bc insufficient information provided
 # We still assume a relationship between region and acs in projections.
@@ -665,12 +676,29 @@ corrplot(correlation)
 
 # Severity glm -logno
 data_sev <- haz_mod_data[sum_hazard > 0,]
-sev_glm <- gamlss(sum_hazard ~ Region + Group, family = LOGNO, data = data_sev)
+sev_glm <- gamlss(sum_hazard ~ Region + Group, family = LOGNO, link = identity, data = data_sev)
 summary(sev_glm)
 
 sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-sev_results <- cbind(data_sev, "fit_sev" = exp(sev_results$fit), "fit_sev_se" = exp(sev_results$se.fit))
-sev_results_summ <- unique(sev_results[,.(Region, Group, fit_sev, fit_sev_se)])[order(Region, Group)]
+sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
+# Cox method for confidence intervals
+sev_results <- sev_results[data_sev[,.N, by = c("Region", "Group")], on = c("Region", "Group")]
+sev_results[,fit_sev_sd := fit_sev_se*sqrt(N)]
+sev_results[,`:=`(point_est = fit_sev + fit_sev_sd^2/2,
+                  lower_bound = fit_sev + fit_sev_sd^2/2 - 2.02*sqrt(fit_sev_sd^2/N + fit_sev_sd^4/2/(N-1)),
+                  upper_bound = fit_sev + fit_sev_sd^2/2 + 2.02*sqrt(fit_sev_sd^2/N + fit_sev_se^4/2/(N-1)))]
+sev_results[,`:=`(trans_point_est = exp(point_est),
+                  trans_lower_bound = exp(lower_bound),
+                  trans_upper_bound = exp(upper_bound))]
+
+# Alternative - large sample theory https://jse.amstat.org/v13n1/olsson.html#:~:text=For%20a%2095%25%20confidence%20interval,(T2%3B0.975)%5D.
+# sev_results[,`:=`(trans_fit_sev = exp(fit_sev), trans_fit_sev_se = exp(fit_sev + fit_sev_se))]
+# sev_results[,`:=`(lower_bound = trans_fit_sev - 1.96*trans_fit_sev_se,
+#                   upper_bound = trans_fit_sev + 1.96*trans_fit_sev_se)]
+
+sev_results_summ <- unique(sev_results[,.(Region, Group, trans_point_est, trans_lower_bound, trans_upper_bound)],
+                           by = c("Region", "Group", "trans_point_est", "trans_lower_bound", "trans_upper_bound"))[order(Region, Group)]
+
 
 # Severity glm - pareto - 1 parameter distribution
 # library("gpdFit")
@@ -683,15 +711,13 @@ sev_results_summ <- unique(sev_results[,.(Region, Group, fit_sev, fit_sev_se)])[
 # sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
 
 # Severity glm - weibull
-data_sev <- haz_mod_data[sum_hazard > 0,]
-sev_glm <- gamlss(sum_hazard ~ Region + Group, family = WEI, data = data_sev)
-summary(sev_glm)
-
-sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
-sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
-
-
+# data_sev <- haz_mod_data[sum_hazard > 0,]
+# sev_glm <- gamlss(sum_hazard ~ Region + Group, family = WEI, data = data_sev)
+# summary(sev_glm)
+#
+# sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
+# sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
+# sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
 
 # write.xlsx(sev_results_summ,
 #            file.path(data_dir, "freq_sev_results.xlsx"),
@@ -708,4 +734,41 @@ writeData(wb, "tot_freq", freq_results_summ, startRow = 1, startCol = 1)
 writeData(wb, "nil_freq", nil_results_summ, startRow = 1, startCol = 1)
 writeData(wb, "pos_sev", sev_results_summ, startRow = 1, startCol = 1)
 saveWorkbook(wb, file = file.path(data_dir, "freq_sev_results.xlsx"), overwrite = TRUE)
+
+
+#### Confidence analysis - for solvency ####
+# Simulate variables - frequency
+print(freq_glm)
+freq_sim <- rbind(rnbinom(10000))
+# I'm lost here
+# Not sure how to retrieve nbinom parameters from the gamlss we've fitted
+
+
+# Simulate variables - severity
+print(sev_glm)
+sev_glm$mu.coefficients
+sev_glm$sigma.coefficients
+# I think this process is right
+
+sev_sim <- c()
+mu_int <- sev_glm$mu.coefficients[1]
+mu_groups <- as.data.table(cbind("medium" = sev_glm$mu.coefficients[7],"minor" = sev_glm$mu.coefficients[8]))
+for (reg in c("1","2","3","4","5","6")) {
+  if (reg == "1") { mu_coeff <- mu_int }
+  else { mu_coeff <- sev_glm$mu.coefficients[reg] + mu_int}
+  for (group in splits) {
+    #insert case statement to get mu_coeff_group = mu_coeff + group coeff
+    sev_sim <- rbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients)
+  }
+}
+
+
+
+
+
+
+
+
+
+
 
