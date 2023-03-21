@@ -195,10 +195,10 @@ haz_mod_data[Year >= 2005, post2005 := 1]
 MajorHazard <- subset(haz_mod_data, Group == "major" & Property.Damage > 0)
 plotdist(MajorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
 
-MajHaz.Sev.ln <- fitdist(MajorHazard$prop_dam_inf, "lnorm", method = "mme") #not the best but a better fit
-MajHaz.Sev.nb <- fitdist(MajorHazard$prop_dam_inf, "nbinom", method = "mme") #very bad fit
-MajHaz.Sev.exp <- fitdist(MajorHazard$prop_dam_inf, "exp", method = "mme") #very bad fit
-MajHaz.Sev.gamma <- fitdist(MajorHazard$prop_dam_inf, "gamma", method = "mme") #not the best but a better fit
+MajHaz.Sev.ln <- fitdist(MajorHazard$prop_dam_inf, "lnorm", method = "mse") #not the best but a better fit
+MajHaz.Sev.nb <- fitdist(MajorHazard$prop_dam_inf, "nbinom", method = "mse") #very bad fit
+MajHaz.Sev.exp <- fitdist(MajorHazard$prop_dam_inf, "exp", method = "mse") #very bad fit
+MajHaz.Sev.gamma <- fitdist(MajorHazard$prop_dam_inf, "gamma", method = "mse") #not the best but a better fit
 MajHaz.Sev.pareto <- fitdist(MajorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) ## one of the better fits
 MajHaz.Sev.weibull <- fitdist(MajorHazard$prop_dam_inf, "weibull") #one of the better fits
 
@@ -223,10 +223,10 @@ gofstat(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, Maj
 MediumHazard <- subset(haz_mod_data, Group == "medium" & Property.Damage > 0)
 plotdist(MediumHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
 
-MedHaz.Sev.ln <- fitdist(MediumHazard$prop_dam_inf, "lnorm", method = "mme") 
-MedHaz.Sev.nb <- fitdist(MediumHazard$prop_dam_inf, "nbinom", method = "mme") 
-MedHaz.Sev.exp <- fitdist(MediumHazard$prop_dam_inf, "exp", method = "mme") 
-MedHaz.Sev.gamma <- fitdist(MediumHazard$prop_dam_inf, "gamma", method = "mme")
+MedHaz.Sev.ln <- fitdist(MediumHazard$prop_dam_inf, "lnorm", method = "mse") 
+MedHaz.Sev.nb <- fitdist(MediumHazard$prop_dam_inf, "nbinom", method = "mse") 
+MedHaz.Sev.exp <- fitdist(MediumHazard$prop_dam_inf, "exp", method = "mse") 
+MedHaz.Sev.gamma <- fitdist(MediumHazard$prop_dam_inf, "gamma", method = "mse")
 MedHaz.Sev.pareto <- fitdist(MediumHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) # best fit graphically
 MedHaz.Sev.weibull <- fitdist(MediumHazard$prop_dam_inf, "weibull") #one of the better fits
 
@@ -251,10 +251,10 @@ gofstat(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, Med
 MinorHazard <- subset(haz_mod_data, Group == "minor" & Property.Damage > 0)
 plotdist(MinorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
 
-MinHaz.Sev.ln <- fitdist(MinorHazard$prop_dam_inf, "lnorm", method = "mme")
-MinHaz.Sev.nb <- fitdist(MinorHazard$prop_dam_inf, "nbinom", method = "mme")
-MinHaz.Sev.exp <- fitdist(MinorHazard$prop_dam_inf, "exp", method = "mme")
-MinHaz.Sev.gamma <- fitdist(MinorHazard$prop_dam_inf, "gamma", method = "mme")
+MinHaz.Sev.ln <- fitdist(MinorHazard$prop_dam_inf, "lnorm", method = "mse")
+MinHaz.Sev.nb <- fitdist(MinorHazard$prop_dam_inf, "nbinom", method = "mse")
+MinHaz.Sev.exp <- fitdist(MinorHazard$prop_dam_inf, "exp", method = "mse")
+MinHaz.Sev.gamma <- fitdist(MinorHazard$prop_dam_inf, "gamma", method = "mse")
 MinHaz.Sev.pareto <- fitdist(MinorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) 
 MinHaz.Sev.weibull <- fitdist(MinorHazard$prop_dam_inf, "weibull")
 
@@ -280,10 +280,10 @@ gofstat(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, Min
 AllHazard <- subset(haz_mod_data,Property.Damage > 0)
 
 
-AllHaz.Sev.ln <- fitdist(AllHazard$prop_dam_inf, "lnorm", method = "mme")
-AllHaz.Sev.nb <- fitdist(AllHazard$prop_dam_inf, "nbinom", method = "mme")
-AllHaz.Sev.exp <- fitdist(AllHazard$prop_dam_inf, "exp", method = "mme")
-AllHaz.Sev.gamma <- fitdist(AllHazard$prop_dam_inf, "gamma", method = "mme")
+AllHaz.Sev.ln <- fitdist(AllHazard$prop_dam_inf, "lnorm", method = "mse")
+AllHaz.Sev.nb <- fitdist(AllHazard$prop_dam_inf, "nbinom", method = "mse")
+AllHaz.Sev.exp <- fitdist(AllHazard$prop_dam_inf, "exp", method = "mse")
+AllHaz.Sev.gamma <- fitdist(AllHazard$prop_dam_inf, "gamma", method = "mse")
 AllHaz.Sev.pareto <- fitdist(AllHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) 
 AllHaz.Sev.weibull <- fitdist(AllHazard$prop_dam_inf, "weibull")
 
