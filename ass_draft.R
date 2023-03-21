@@ -29,7 +29,9 @@ splits <- c("minor", "medium", "major")
 exc_rate <- 1.321
 
 #### Data read ####
+
 #Waddah note: change working directory on mac, then remove "file.path(data_dir,)", and keep everything else the same
+
 hazard <- read.xlsx(file.path(data_dir, "2023-student-research-hazard-event-data.xlsx"),
                     sheet = "Hazard Data",
                     rows = 13:3379, cols = 2:9)
@@ -189,6 +191,113 @@ haz_mod_data[, sum_hazard := prop_dam_inf]
 
 haz_mod_data$post2005 <- 0
 haz_mod_data[Year >= 2005, post2005 := 1]
+
+
+#### Major Data - distribution fitting
+MajorHazard <- subset(haz_mod_data, Group == "major" & Property.Damage > 0)
+plotdist(MajorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
+
+MajHaz.Sev.ln <- fitdist(MajorHazard$prop_dam_inf, "lnorm", method = "mse") #not the best but a better fit
+MajHaz.Sev.nb <- fitdist(MajorHazard$prop_dam_inf, "nbinom", method = "mme") #very bad fit
+MajHaz.Sev.exp <- fitdist(MajorHazard$prop_dam_inf, "exp", method = "mme") #very bad fit
+MajHaz.Sev.gamma <- fitdist(MajorHazard$prop_dam_inf, "gamma", method = "mme") #not the best but a better fit
+MajHaz.Sev.pareto <- fitdist(MajorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) ## one of the better fits
+MajHaz.Sev.weibull <- fitdist(MajorHazard$prop_dam_inf, "weibull") #one of the better fits
+
+plot(MajHaz.Sev.ln)
+  ##plot(MajHaz.Sev.nb) #doesn't load LOL, do not use this code
+plot(MajHaz.Sev.exp)
+plot(MajHaz.Sev.gamma)
+plot(MajHaz.Sev.pareto)
+plot(MajHaz.Sev.weibull)
+
+        #graphical analysis
+par(mfrow = c(2,2))
+denscomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+cdfcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+qqcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+ppcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+
+        #Goodness of Fit Test
+gofstat(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+
+#### Medium Data
+MediumHazard <- subset(haz_mod_data, Group == "medium" & Property.Damage > 0)
+plotdist(MediumHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
+
+MedHaz.Sev.ln <- fitdist(MediumHazard$prop_dam_inf, "lnorm", method = "mse")
+MedHaz.Sev.nb <- fitdist(MediumHazard$prop_dam_inf, "nbinom", method = "mme")
+MedHaz.Sev.exp <- fitdist(MediumHazard$prop_dam_inf, "exp", method = "mme")
+MedHaz.Sev.gamma <- fitdist(MediumHazard$prop_dam_inf, "gamma", method = "mme")
+MedHaz.Sev.pareto <- fitdist(MediumHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) # best fit graphically
+MedHaz.Sev.weibull <- fitdist(MediumHazard$prop_dam_inf, "weibull") #one of the better fits
+
+plot(MedHaz.Sev.ln)
+  ##plot(MedHaz.Sev.nb) #doesn't load LOL, do not use this code
+plot(MedHaz.Sev.exp)
+plot(MedHaz.Sev.gamma)
+plot(MedHaz.Sev.pareto)
+plot(MedHaz.Sev.weibull)
+
+        #graphical analysis
+par(mfrow = c(2,2))
+denscomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+cdfcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+qqcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+ppcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+
+        #Goodness of Fit Test
+gofstat(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+
+#### Minor Data
+MinorHazard <- subset(haz_mod_data, Group == "minor" & Property.Damage > 0)
+plotdist(MinorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
+
+MinHaz.Sev.ln <- fitdist(MinorHazard$prop_dam_inf, "lnorm", method = "mse")
+MinHaz.Sev.nb <- fitdist(MinorHazard$prop_dam_inf, "nbinom", method = "mme")
+MinHaz.Sev.exp <- fitdist(MinorHazard$prop_dam_inf, "exp", method = "mme")
+MinHaz.Sev.gamma <- fitdist(MinorHazard$prop_dam_inf, "gamma", method = "mme")
+MinHaz.Sev.pareto <- fitdist(MinorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500))
+MinHaz.Sev.weibull <- fitdist(MinorHazard$prop_dam_inf, "weibull")
+
+plot(MinHaz.Sev.ln)
+  ##plot(MinHaz.Sev.nb) #doesn't load LOL, do not use this code
+plot(MinHaz.Sev.exp)
+plot(MinHaz.Sev.gamma)
+plot(MinHaz.Sev.pareto)
+plot(MinHaz.Sev.weibull) #seems strongest
+
+        #graphical analysis
+par(mfrow = c(2,2))
+denscomp(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+cdfcomp(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+qqcomp(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+ppcomp(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+
+        #Goodness of Fit Test
+gofstat(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+
+####Full Data (no split)
+
+AllHazard <- subset(haz_mod_data,Property.Damage > 0)
+
+
+AllHaz.Sev.ln <- fitdist(AllHazard$prop_dam_inf, "lnorm", method = "mse")
+AllHaz.Sev.nb <- fitdist(AllHazard$prop_dam_inf, "nbinom", method = "mme")
+AllHaz.Sev.exp <- fitdist(AllHazard$prop_dam_inf, "exp", method = "mme")
+AllHaz.Sev.gamma <- fitdist(AllHazard$prop_dam_inf, "gamma", method = "mme")
+AllHaz.Sev.pareto <- fitdist(AllHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500))
+AllHaz.Sev.weibull <- fitdist(AllHazard$prop_dam_inf, "weibull")
+
+        #graphical analysis
+par(mfrow = c(2,2))
+denscomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+cdfcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+qqcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+ppcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+
+        #Goodness of Fit Test
+gofstat(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
 
 
 #### Diagnostic graphs for frequency/severity fits ####
@@ -660,6 +769,9 @@ nil_results_summ <- unique(nil_results[,.(Region, Group, fit_freq, fit_freq_se)]
 #            file.path(data_dir, "freq_sev_results.xlsx"),
 #            sheetName = "nil_freq")
 
+
+#########################################
+
 #### Predict avg prop damage of events for each split, by region ####
 # Not offset by populations of regions bc insufficient information provided
 # We still assume a relationship between region and acs in projections.
@@ -681,7 +793,7 @@ summary(sev_glm)
 
 sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
 sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
-# Cox method for confidence intervals
+# Cox method for confidence intervals https://jse.amstat.org/v13n1/olsson.html#:~:text=For%20a%2095%25%20confidence%20interval,(T2%3B0.975)%5D.
 sev_results <- sev_results[data_sev[,.N, by = c("Region", "Group")], on = c("Region", "Group")]
 sev_results[,fit_sev_sd := fit_sev_se*sqrt(N)]
 sev_results[,`:=`(point_est = fit_sev + fit_sev_sd^2/2,
@@ -691,10 +803,6 @@ sev_results[,`:=`(trans_point_est = exp(point_est),
                   trans_lower_bound = exp(lower_bound),
                   trans_upper_bound = exp(upper_bound))]
 
-# Alternative - large sample theory https://jse.amstat.org/v13n1/olsson.html#:~:text=For%20a%2095%25%20confidence%20interval,(T2%3B0.975)%5D.
-# sev_results[,`:=`(trans_fit_sev = exp(fit_sev), trans_fit_sev_se = exp(fit_sev + fit_sev_se))]
-# sev_results[,`:=`(lower_bound = trans_fit_sev - 1.96*trans_fit_sev_se,
-#                   upper_bound = trans_fit_sev + 1.96*trans_fit_sev_se)]
 
 sev_results_summ <- unique(sev_results[,.(Region, Group, trans_point_est, trans_lower_bound, trans_upper_bound)],
                            by = c("Region", "Group", "trans_point_est", "trans_lower_bound", "trans_upper_bound"))[order(Region, Group)]
@@ -735,6 +843,7 @@ writeData(wb, "nil_freq", nil_results_summ, startRow = 1, startCol = 1)
 writeData(wb, "pos_sev", sev_results_summ, startRow = 1, startCol = 1)
 saveWorkbook(wb, file = file.path(data_dir, "freq_sev_results.xlsx"), overwrite = TRUE)
 
+#########################################
 
 #### Confidence analysis - for solvency ####
 # Simulate variables - frequency
@@ -761,14 +870,5 @@ for (reg in c("1","2","3","4","5","6")) {
     sev_sim <- rbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients)
   }
 }
-
-
-
-
-
-
-
-
-
 
 
