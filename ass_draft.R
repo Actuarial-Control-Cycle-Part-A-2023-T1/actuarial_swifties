@@ -180,7 +180,6 @@ write.xlsx(hazard_edit[,.(Region, Hazard.Event, Quarter, Year, Duration, Fatalit
            file.path(data_dir, "inf_hazard_event_data.xlsx"),
            sheetName = "inf_data")
 
-#### Farah x Waddah excel analysis ####
 
 #### Minor/medium/major split ####
 haz_mod_data <- copy(hazard_edit)
@@ -226,9 +225,9 @@ gofstat(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, Maj
 MediumHazard <- subset(haz_mod_data, Group == "medium" & Property.Damage > 0)
 plotdist(MediumHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
 
-MedHaz.Sev.ln <- fitdist(MediumHazard$prop_dam_inf, "lnorm", method = "mse") 
-MedHaz.Sev.nb <- fitdist(MediumHazard$prop_dam_inf, "nbinom", method = "mme") 
-MedHaz.Sev.exp <- fitdist(MediumHazard$prop_dam_inf, "exp", method = "mme") 
+MedHaz.Sev.ln <- fitdist(MediumHazard$prop_dam_inf, "lnorm", method = "mse")
+MedHaz.Sev.nb <- fitdist(MediumHazard$prop_dam_inf, "nbinom", method = "mme")
+MedHaz.Sev.exp <- fitdist(MediumHazard$prop_dam_inf, "exp", method = "mme")
 MedHaz.Sev.gamma <- fitdist(MediumHazard$prop_dam_inf, "gamma", method = "mme")
 MedHaz.Sev.pareto <- fitdist(MediumHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) # best fit graphically
 MedHaz.Sev.weibull <- fitdist(MediumHazard$prop_dam_inf, "weibull") #one of the better fits
@@ -250,7 +249,7 @@ ppcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedH
         #Goodness of Fit Test
 gofstat(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
 
-#### Minor Data 
+#### Minor Data
 MinorHazard <- subset(haz_mod_data, Group == "minor" & Property.Damage > 0)
 plotdist(MinorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
 
@@ -258,7 +257,7 @@ MinHaz.Sev.ln <- fitdist(MinorHazard$prop_dam_inf, "lnorm", method = "mse")
 MinHaz.Sev.nb <- fitdist(MinorHazard$prop_dam_inf, "nbinom", method = "mme")
 MinHaz.Sev.exp <- fitdist(MinorHazard$prop_dam_inf, "exp", method = "mme")
 MinHaz.Sev.gamma <- fitdist(MinorHazard$prop_dam_inf, "gamma", method = "mme")
-MinHaz.Sev.pareto <- fitdist(MinorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) 
+MinHaz.Sev.pareto <- fitdist(MinorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500))
 MinHaz.Sev.weibull <- fitdist(MinorHazard$prop_dam_inf, "weibull")
 
 plot(MinHaz.Sev.ln)
@@ -287,7 +286,7 @@ AllHaz.Sev.ln <- fitdist(AllHazard$prop_dam_inf, "lnorm", method = "mse")
 AllHaz.Sev.nb <- fitdist(AllHazard$prop_dam_inf, "nbinom", method = "mme")
 AllHaz.Sev.exp <- fitdist(AllHazard$prop_dam_inf, "exp", method = "mme")
 AllHaz.Sev.gamma <- fitdist(AllHazard$prop_dam_inf, "gamma", method = "mme")
-AllHaz.Sev.pareto <- fitdist(AllHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) 
+AllHaz.Sev.pareto <- fitdist(AllHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500))
 AllHaz.Sev.weibull <- fitdist(AllHazard$prop_dam_inf, "weibull")
 
         #graphical analysis
@@ -531,6 +530,19 @@ gofstat(list(medium.freq.fit.exp, medium.freq.fit.nb), fitnames = c("exponential
 #GOF Test minor
 gofstat(list(minor.freq.fit.exp, minor.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
 
+# nb for all
+freq.fit.nb <- fitdist(data_freq$N, "nbinom", method = "mme")
+plot(freq.fit.nb)
+freq.fit.nb$aic
+freq.fit.nb$bic
+prob.0 <- freq.fit.nb$estimate[1]/(freq.fit.nb$estimate[1] + freq.fit.nb$estimate[2])
+
+freq.fit.nb.1 <- fitdist(data_freq.1$N, "nbinom", method = "mme")
+plot(freq.fit.nb.1)
+freq.fit.nb.1$aic
+freq.fit.nb.1$bic
+prob.1 <- freq.fit.nb.1$estimate[1]/(freq.fit.nb.1$estimate[1] + freq.fit.nb.1$estimate[2])
+
 #### Severity - distribution fitting ####
 MajorHazard <- subset(haz_mod_data, Group == "major" & Property.Damage > 0)
 plotdist(MajorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
@@ -637,6 +649,7 @@ ppcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllH
 #Goodness of Fit Test
 gofstat(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
 
+#########################################
 #### Predict number of events for each split, by region ####
 # Check existing trends in notifications by split
 ## why the ~ 0 claims ~ Year 2000?
@@ -663,7 +676,7 @@ for (reg in c("1","2","3","4","5","6")) {
 }
 
 
-# Confrim variation in experience increased considerably following 2005
+# Confirm variation in experience increased considerably following 2005
 sd(haz_mod_data[post2005 == FALSE, .N, yq]$N)
 # [1] 10.39263
 sd(haz_mod_data[post2005 == TRUE, .N, yq]$N) #lots more variation here
@@ -756,91 +769,6 @@ nil_results_summ <- unique(nil_results[,.(Region, Group, fit_freq, fit_freq_se)]
 #            file.path(data_dir, "freq_sev_results.xlsx"),
 #            sheetName = "nil_freq")
 
-#### Amanda Check frequency
-# GOF Test for ALL
-gofstat(list(freq.fit.exp, freq.fit.nb), fitnames = c("exponential","negative binomial"))
-# filter for major medium and minor
-major_hazard_mod_data <- haz_mod_data[Group == 'major',]
-major_data_freq <- merge(major_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
-major_data_freq[,N := ifelse(is.na(N), 0, N)]
-major_data_freq.1 <- merge(major_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
-major_data_freq.1[,N := ifelse(is.na(N), 0, N)]
-
-medium_hazard_mod_data <- haz_mod_data[Group == 'medium',]
-medium_data_freq <- merge(medium_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
-medium_data_freq[,N := ifelse(is.na(N), 0, N)]
-medium_data_freq.1 <- merge(medium_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
-medium_data_freq.1[,N := ifelse(is.na(N), 0, N)]
-
-minor_hazard_mod_data <- haz_mod_data[Group == 'minor',]
-minor_data_freq <- merge(minor_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
-minor_data_freq[,N := ifelse(is.na(N), 0, N)]
-minor_data_freq.1 <- merge(minor_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
-minor_data_freq.1[,N := ifelse(is.na(N), 0, N)]
-
-#exp
-major.freq.fit.exp <- fitdist(major_data_freq$N, "exp", method = "mme")
-summary(major.freq.fit.exp)
-plot(major.freq.fit.exp)
-
-major.freq.fit.exp.1 <- fitdist(major_data_freq.1$N, "exp", method = "mme")
-plot(major.freq.fit.exp.1)
-summary(major.freq.fit.exp.1)
-
-medium.freq.fit.exp <- fitdist(medium_data_freq$N, "exp", method = "mme")
-summary(medium.freq.fit.exp)
-plot(medium.freq.fit.exp)
-
-medium.freq.fit.exp.1 <- fitdist(medium_data_freq.1$N, "exp", method = "mme")
-plot(medium.freq.fit.exp.1)
-summary(medium.freq.fit.exp.1)
-
-minor.freq.fit.exp <- fitdist(minor_data_freq$N, "exp", method = "mme")
-summary(minor.freq.fit.exp)
-plot(minor.freq.fit.exp)
-
-minor.freq.fit.exp.1 <- fitdist(minor_data_freq.1$N, "exp", method = "mme")
-plot(minor.freq.fit.exp.1)
-summary(minor.freq.fit.exp.1)
-
-#nb
-major.freq.fit.nb <- fitdist(major_data_freq$N, "nbinom", method = "mme")
-summary(major.freq.fit.nb)
-plot(major.freq.fit.nb)
-major.prob.0 <- major.freq.fit.nb$estimate[1]/(major.freq.fit.nb$estimate[1] + major.freq.fit.nb$estimate[2])
-
-major.freq.fit.nb.1 <- fitdist(major_data_freq.1$N, "nbinom", method = "mme")
-summary(major.freq.fit.nb.1)
-plot(major.freq.fit.nb.1)
-major.prob.1 <- major.freq.fit.nb.1$estimate[1]/(major.freq.fit.nb.1$estimate[1] + major.freq.fit.nb.1$estimate[2])
-
-medium.freq.fit.nb <- fitdist(medium_data_freq$N, "nbinom", method = "mme")
-summary(medium.freq.fit.nb)
-plot(medium.freq.fit.nb)
-medium.prob.0 <- medium.freq.fit.nb$estimate[1]/(medium.freq.fit.nb$estimate[1] + medium.freq.fit.nb$estimate[2])
-
-medium.freq.fit.nb.1 <- fitdist(medium_data_freq.1$N, "nbinom", method = "mme")
-plot(medium.freq.fit.nb.1)
-medium.prob.1 <- medium.freq.fit.nb.1$estimate[1]/(medium.freq.fit.nb.1$estimate[1] + medium.freq.fit.nb.1$estimate[2])
-
-minor.freq.fit.nb <- fitdist(minor_data_freq$N, "nbinom", method = "mme")
-summary(minor.freq.fit.nb)
-plot(minor.freq.fit.nb)
-minor.prob.0 <- minor.freq.fit.nb$estimate[1]/(minor.freq.fit.nb$estimate[1] + minor.freq.fit.nb$estimate[2])
-
-minor.freq.fit.nb.1 <- fitdist(minor_data_freq.1$N, "nbinom", method = "mme")
-plot(minor.freq.fit.nb.1)
-minor.prob.1 <- minor.freq.fit.nb.1$estimate[1]/(minor.freq.fit.nb.1$estimate[1] + minor.freq.fit.nb.1$estimate[2])
-
-#GOF Test major
-gofstat(list(major.freq.fit.exp, major.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
-
-#GOF Test medium
-gofstat(list(medium.freq.fit.exp, medium.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
-
-#GOF Test minor
-gofstat(list(minor.freq.fit.exp, minor.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
-
 
 #########################################
 
@@ -860,12 +788,25 @@ corrplot(correlation)
 
 # Severity glm -logno
 data_sev <- haz_mod_data[sum_hazard > 0,]
-sev_glm <- gamlss(sum_hazard ~ Region + Group, family = LOGNO, data = data_sev)
+sev_glm <- gamlss(sum_hazard ~ Region + Group, family = LOGNO, link = identity, data = data_sev)
 summary(sev_glm)
 
 sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-sev_results <- cbind(data_sev, "fit_sev" = exp(sev_results$fit), "fit_sev_se" = exp(sev_results$se.fit))
-sev_results_summ <- unique(sev_results[,.(Region, Group, fit_sev, fit_sev_se)])[order(Region, Group)]
+sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
+# Cox method for confidence intervals https://jse.amstat.org/v13n1/olsson.html#:~:text=For%20a%2095%25%20confidence%20interval,(T2%3B0.975)%5D.
+sev_results <- sev_results[data_sev[,.N, by = c("Region", "Group")], on = c("Region", "Group")]
+sev_results[,fit_sev_sd := fit_sev_se*sqrt(N)]
+sev_results[,`:=`(point_est = fit_sev + fit_sev_sd^2/2,
+                  lower_bound = fit_sev + fit_sev_sd^2/2 - 2.02*sqrt(fit_sev_sd^2/N + fit_sev_sd^4/2/(N-1)),
+                  upper_bound = fit_sev + fit_sev_sd^2/2 + 2.02*sqrt(fit_sev_sd^2/N + fit_sev_se^4/2/(N-1)))]
+sev_results[,`:=`(trans_point_est = exp(point_est),
+                  trans_lower_bound = exp(lower_bound),
+                  trans_upper_bound = exp(upper_bound))]
+
+
+sev_results_summ <- unique(sev_results[,.(Region, Group, trans_point_est, trans_lower_bound, trans_upper_bound)],
+                           by = c("Region", "Group", "trans_point_est", "trans_lower_bound", "trans_upper_bound"))[order(Region, Group)]
+
 
 # Severity glm - pareto - 1 parameter distribution
 # library("gpdFit")
@@ -878,15 +819,13 @@ sev_results_summ <- unique(sev_results[,.(Region, Group, fit_sev, fit_sev_se)])[
 # sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
 
 # Severity glm - weibull
-data_sev <- haz_mod_data[sum_hazard > 0,]
-sev_glm <- gamlss(sum_hazard ~ Region + Group, family = WEI, data = data_sev)
-summary(sev_glm)
-
-sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
-sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
-
-
+# data_sev <- haz_mod_data[sum_hazard > 0,]
+# sev_glm <- gamlss(sum_hazard ~ Region + Group, family = WEI, data = data_sev)
+# summary(sev_glm)
+#
+# sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
+# sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
+# sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
 
 # write.xlsx(sev_results_summ,
 #            file.path(data_dir, "freq_sev_results.xlsx"),
@@ -904,8 +843,32 @@ writeData(wb, "nil_freq", nil_results_summ, startRow = 1, startCol = 1)
 writeData(wb, "pos_sev", sev_results_summ, startRow = 1, startCol = 1)
 saveWorkbook(wb, file = file.path(data_dir, "freq_sev_results.xlsx"), overwrite = TRUE)
 
+#########################################
 
-write.xlsx(hazard_edit[,.(Region, Hazard.Event, Quarter, Year, Duration, Fatalities, Injuries, prop_dam_inf)],
-           file.path(data_dir, "inf_temp_housing_data.xlsx"),
-           sheetName = "inf_th")
+#### Confidence analysis - for solvency ####
+# Simulate variables - frequency
+print(freq_glm)
+freq_sim <- rbind(rnbinom(10000))
+# I'm lost here
+# Not sure how to retrieve nbinom parameters from the gamlss we've fitted
+
+
+# Simulate variables - severity
+print(sev_glm)
+sev_glm$mu.coefficients
+sev_glm$sigma.coefficients
+# I think this process is right
+
+sev_sim <- c()
+mu_int <- sev_glm$mu.coefficients[1]
+mu_groups <- as.data.table(cbind("medium" = sev_glm$mu.coefficients[7],"minor" = sev_glm$mu.coefficients[8]))
+for (reg in c("1","2","3","4","5","6")) {
+  if (reg == "1") { mu_coeff <- mu_int }
+  else { mu_coeff <- sev_glm$mu.coefficients[reg] + mu_int}
+  for (group in splits) {
+    #insert case statement to get mu_coeff_group = mu_coeff + group coeff
+    sev_sim <- rbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients)
+  }
+}
+
 
