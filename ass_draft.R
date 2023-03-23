@@ -915,11 +915,43 @@ for (reg in 1:6) {
     sev_sim <- cbind(sev_sim,sim_results)
   }
 }
-
-
-
-
-
-
 sev_glm$mu.coefficients
 
+
+# SEVERITY SIMULATION - Amanda
+# Set up data frame
+regions <- 1:6
+groups <- c(unique(data_sev$Group))
+set.seed(42) # for reproducibility
+# Create data frame
+mu_coeff <- data.frame(region = rep(regions, each = length(groups)),
+                 group = rep(groups, length(regions)),
+                 coeff = rep(NA, length(regions) * length(groups)))
+coeff <- c()
+i = 1
+for (i in 1:nrow(mu_coeff)){
+  reg <- mu_coeff$region[i]
+  group <- mu_coeff$group[i]
+  if (reg == 1) {
+    mu_int_reg <- mu_int
+  } else {
+    mu_int_reg <- sev_glm$mu.coefficients[reg] + mu_int
+  }
+  if (group == "major") {
+    coeff[i] <- mu_int_reg
+  } else {
+    group_num <- match(group, groups) - 1
+    coeff[i] <- mu_int + mu_groups[[group_num]]
+  }
+}
+
+mu_coeff$coeff <- coeff
+
+#simulate
+nsim <- 10000
+mu_coeff_sim <- t(sapply(1:nrow(mu_coeff), function(i)  rLOGNO(nsim, mu = mu_coeff$coeff[i], sigma = sev_glm$sigma.coefficients)))
+mu_coeff_sim <- data.frame(mu_coeff_sim)
+colnames(mu_coeff_sim) <- paste0("sim_", 1:ncol(mu_coeff_sim))
+
+# Combine simulated values with original data frame
+mu_coeff_combined <- cbind(mu_coeff, mu_coeff_sim)
