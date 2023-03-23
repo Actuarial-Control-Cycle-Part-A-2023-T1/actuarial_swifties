@@ -847,76 +847,74 @@ saveWorkbook(wb, file = file.path(data_dir, "freq_sev_results.xlsx"), overwrite 
 
 #### Confidence analysis - for solvency ####
 # Simulate variables - frequency
-print(freq_glm)
-freq_sim <- rbind(rnbinom(10000))
-# I'm lost here
-# Not sure how to retrieve nbinom parameters from the gamlss we've fitted
+# Use sample mean of number of events across region and group for mu 
+data_freq_mu <- combined_data_freq %>%
+  group_by(Region, Group) %>%
+  summarise(mean_value = mean(N))
+
+# Define hazard categories 
+regions <- unique(data_freq_mu$Region)
+groups <- unique(data_freq_mu$Group)
+
+# Create data frame to store results 
+mu_freq <- data.frame(region = rep(regions, each = length(groups)),
+                       group = rep(groups, length(regions)),
+                       mu = rep(NA, length(regions) * length(groups)))
+
+# Input values for 'mu' and 'theta' into data frame
+mu_freq$mu <- data_freq_mu$mean_value
 
 
-# For mu use the sample averages for each region and each category. 
-# For size use the freq_glm$theta
+# Set seed for reproducibility
+set.seed(42)
 
-# Simulate variables - severity
-print(sev_glm)
-sev_glm$mu.coefficients
-sev_glm$sigma.coefficients
+# Simulate values
+nsim <- 10000
+
+freq_sim <- t(sapply(1:nrow(mu_freq), function(i)  rnbinom(nsim, mu = mu_freq$mu[i], size = freq_glm$theta)))
+freq_sim <- data.frame(freq_sim)
+colnames(freq_sim) <- paste0("sim_", 1:ncol(freq_sim))
+
+# Combine simulated values with existing dataframe
+freq_sim <- cbind(mu_freq, freq_sim)
+
+
+######## Simulate variables - severity (DON'T USE) ##########################################################
+#print(sev_glm)
+#sev_glm$mu.coefficients
+#sev_glm$sigma.coefficients
 # I think this process is right
 
 # Initialize an empty vector to store the simulation results
-sev_sim <- c()
+#sev_sim <- c()
 
 # Extract the intercept and group coefficients from the model
-mu_int <- sev_glm$mu.coefficients[1]
-mu_groups <- as.data.table(cbind("medium" = sev_glm$mu.coefficients[7], "minor" = sev_glm$mu.coefficients[8]))
+#mu_int <- sev_glm$mu.coefficients[1]
+#mu_groups <- as.data.table(cbind("medium" = sev_glm$mu.coefficients[7], "minor" = sev_glm$mu.coefficients[8]))
 
 # Loop over each region and group combination
-for (reg in c("1", "2", "3", "4", "5", "6")) {
-  mu_int <- sev_glm$mu.coefficients[1]
-  if (reg == "1") {
-    # Use the intercept coefficient for the first region
-    mu_coeff <- mu_int
-  } else {
-    # Add the region coefficient to the intercept for subsequent regions
-    mu_coeff <- sev_glm$mu.coefficients[reg] + mu_int
-  }
+#for (reg in c("1", "2", "3", "4", "5", "6")) {
+#  mu_int <- sev_glm$mu.coefficients[1]
+#  if (reg == "1") {
+#    # Use the intercept coefficient for the first region
+#    mu_coeff <- mu_int
+#  } else {
+#    # Add the region coefficient to the intercept for subsequent regions
+#    mu_coeff <- sev_glm$mu.coefficients[reg] + mu_int
+#  }
   
- for (group in unique(data_sev$Group)) {
-    if (group == "major") {
-      # Use the current value of mu_coeff for the "major" group
-      mu_coeff_group <- mu_coeff
-    } else {
+# for (group in unique(data_sev$Group)) {
+#    if (group == "major") {
+#      # Use the current value of mu_coeff for the "major" group
+#      mu_coeff_group <- mu_coeff
+#    } else {
       # Add the appropriate group coefficient to mu_coeff for other groups
-      mu_coeff_group <- mu_coeff + mu_groups[group]
-    }
-    sim_results <- cbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients))
-    sev_sim <- cbind(sev_sim,sim_results)
-  }
-}
-
-# Loop over each region and group combination
-for (reg in 1:6) {
-  if (reg == 1) {
-    # Use the intercept coefficient for the first region
-    mu_coeff <- mu_int
-  } else {
-    # Add the region coefficient to the intercept for subsequent regions
-    mu_coeff <- sev_glm$mu.coefficients[reg] + mu_int
-  }}
-  
-  for (group in unique(data_sev$Group)) {
-    if (group == "major") {
-      # Use the current value of mu_coeff for the "major" group
-      mu_coeff_group <- mu_coeff
-    } else {
-      # Add the appropriate group coefficient to mu_coeff for other groups
-      mu_coeff_group <- mu_coeff + mu_groups[group]
-    }
-    sim_results <- cbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients))
-    sev_sim <- cbind(sev_sim,sim_results)
-  }
-}
-sev_glm$mu.coefficients
-
+#      mu_coeff_group <- mu_coeff + mu_groups[group]
+#    }
+#    sim_results <- cbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients))
+#    sev_sim <- cbind(sev_sim,sim_results)
+#  }
+#}
 
 # SEVERITY SIMULATION - Amanda
 # Set up data frame
