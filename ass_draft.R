@@ -845,9 +845,12 @@ saveWorkbook(wb, file = file.path(data_dir, "freq_sev_results.xlsx"), overwrite 
 
 #########################################
 
+#########################################
+
 #### Confidence analysis - for solvency ####
 # Simulate variables - frequency
 # Use sample mean of number of events across region and group for mu 
+library(dplyr)
 data_freq_mu <- combined_data_freq %>%
   group_by(Region, Group) %>%
   summarise(mean_value = mean(N))
@@ -858,27 +861,27 @@ groups <- unique(data_freq_mu$Group)
 
 # Create data frame to store results 
 mu_freq <- data.frame(region = rep(regions, each = length(groups)),
-                       group = rep(groups, length(regions)),
-                       mu = rep(NA, length(regions) * length(groups)))
+                      group = rep(groups, length(regions)),
+                      mu = rep(NA, length(regions) * length(groups)))
 
 # Input values for 'mu' and 'theta' into data frame
 mu_freq$mu <- data_freq_mu$mean_value
 
 
 # Set seed for reproducibility
-set.seed(42)
+set.seed(20)
 
 # Simulate values
 nsim <- 10000
-
+i=1
 freq_sim <- t(sapply(1:nrow(mu_freq), function(i)  rnbinom(nsim, mu = mu_freq$mu[i], size = freq_glm$theta)))
 freq_sim <- data.frame(freq_sim)
 colnames(freq_sim) <- paste0("sim_", 1:ncol(freq_sim))
 
 # Combine simulated values with existing dataframe
-freq_sim <- cbind(mu_freq, freq_sim)
+freq_sim_combined <- cbind(mu_freq, freq_sim)
 
-
+freq_sim
 ######## Simulate variables - severity (DON'T USE) ##########################################################
 #print(sev_glm)
 #sev_glm$mu.coefficients
@@ -902,13 +905,13 @@ freq_sim <- cbind(mu_freq, freq_sim)
 #    # Add the region coefficient to the intercept for subsequent regions
 #    mu_coeff <- sev_glm$mu.coefficients[reg] + mu_int
 #  }
-  
+
 # for (group in unique(data_sev$Group)) {
 #    if (group == "major") {
 #      # Use the current value of mu_coeff for the "major" group
 #      mu_coeff_group <- mu_coeff
 #    } else {
-      # Add the appropriate group coefficient to mu_coeff for other groups
+# Add the appropriate group coefficient to mu_coeff for other groups
 #      mu_coeff_group <- mu_coeff + mu_groups[group]
 #    }
 #    sim_results <- cbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients))
@@ -920,11 +923,14 @@ freq_sim <- cbind(mu_freq, freq_sim)
 # Set up data frame
 regions <- 1:6
 groups <- c(unique(data_sev$Group))
-set.seed(42) # for reproducibility
+set.seed(20) # for reproducibility
+
+mu_int <- sev_glm$mu.coefficients[1]
+mu_groups <- as.data.table(cbind("medium" = sev_glm$mu.coefficients[7], "minor" = sev_glm$mu.coefficients[8]))
 # Create data frame
 mu_coeff <- data.frame(region = rep(regions, each = length(groups)),
-                 group = rep(groups, length(regions)),
-                 coeff = rep(NA, length(regions) * length(groups)))
+                       group = rep(groups, length(regions)),
+                       coeff = rep(NA, length(regions) * length(groups)))
 coeff <- c()
 i = 1
 for (i in 1:nrow(mu_coeff)){
@@ -951,5 +957,38 @@ mu_coeff_sim <- t(sapply(1:nrow(mu_coeff), function(i)  rLOGNO(nsim, mu = mu_coe
 mu_coeff_sim <- data.frame(mu_coeff_sim)
 colnames(mu_coeff_sim) <- paste0("sim_", 1:ncol(mu_coeff_sim))
 
+mu_coeff_sim
 # Combine simulated values with original data frame
 mu_coeff_combined <- cbind(mu_coeff, mu_coeff_sim)
+
+########## Combine Severity and Frequency Models #########################
+# Add additional costs (home and contents)
+material_labour <- 0.35
+contents <- 0.58
+THC_2021 <- 1298835945
+proportion <- 0.5
+mu_coeff_sim_inf <- mu_coeff_sim*(1+contents)+ mu_coeff_sim*(1+contents+material_labour)*proportion
+# Multiply severity and frequency simulations to obtain total cost
+combined_sim <- mu_coeff_sim_inf*freq_sim
+freq_sim
+# Sum columns to obtain total cost for Storlysia across all regions and groups
+combined_sim <- colSums(combined_sim)
+# Import program reduction (hardcoded from excel 2020 figures)
+reduction <- 1-0.38731162 
+
+# Reduce based on program 
+combined_sim_red <- (combined_sim +THC_2021)*reduction 
+
+# Import GDP data
+gdp <- read.xlsx(file.path(data_dir, "Projection of Economic Costs FINAL.xlsx"),
+                 sheet = "% of GDP - Voluntary",
+                 rows = 8, cols = 2:53)
+gdp_10percent <- gdp*0.1
+
+# Determine confidence intervals
+solvency_99.5 <- quantile(combined_sim_red, 0.995)
+solvency_85 <- quantile(combined_sim_red, 0.85)
+a<- solvency_99.5 - mean(combined_sim_red)
+b <- solvency_85 - mean(combined_sim_red)
+a 
+b
