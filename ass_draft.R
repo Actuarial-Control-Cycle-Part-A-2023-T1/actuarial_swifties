@@ -850,9 +850,6 @@ for (i in 1:nrow(mu_coeff)){
   }
 }
 
-
-
-=======
 mu_coeff$coeff <- coeff
 
 #simulate
