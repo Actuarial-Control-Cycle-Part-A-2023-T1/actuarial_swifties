@@ -652,8 +652,8 @@ gofstat(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, All
 #########################################
 #### Predict number of events for each split, by region ####
 # Check existing trends in notifications by split
-## why the ~ 0 claims ~ Year 2000?
-## why the jump in claims in the recent 20 years?
+## why are there ~ 0 claims ~ Year 2000?
+## why is there a jump in claims in the recent 20 years?
 ## edit to definition of regions may explain reduction in region 1 notifications and sudden hike in other region notifications
 
 # Frequency plots by year, by region and mmm group
@@ -715,15 +715,6 @@ colnames(freq_skeleton.1) <- c("Region", "Group", "Year")
 data_freq_groups.1 <- merge(haz_mod_data[post2005 == TRUE & sum_hazard > 0, .N, c("Region", "Group", "Year")], freq_skeleton.1, by = c("Region", "Group", "Year"), all.y = TRUE)
 data_freq_groups.1[,N := ifelse(is.na(N), 0, N)]
 
-# Frequency glm
-# freq_glm_major <-gamlss(N ~ Region, family = NBI, data = data_freq_groups.1[Group == "major"])
-# summary(freq_glm_major)
-#
-# freq_glm_medium <-gamlss(N ~ Region, family = NBI, data = data_freq_groups[Group == "medium"])
-# summary(freq_glm_medium)
-#
-# freq_glm_major <-gamlss(N ~ Region, family = NBI, data = data_freq_groups[Group == "minor"])
-# summary(freq_glm_minor)
 
 combined_data_freq <- rbind(data_freq_groups.1[Group == "major"],
                             data_freq_groups[Group == "medium"],
@@ -741,35 +732,6 @@ freq_results_summ <- unique(freq_results[,.(Region, Group, fit_freq, fit_freq_se
 #            file.path(data_dir, "freq_sev_results.xlsx"),
 #            sheetName = "tot_freq")
 
-
-# Similar distribution for nil claims
-data_nil <- merge(haz_mod_data[sum_hazard == 0, .N, c("Region", "Group", "Year")], freq_skeleton, by = c("Region", "Group", "Year"), all.y = TRUE)
-data_nil[,N := ifelse(is.na(N), 0, N)]
-data_nil.1 <- merge(haz_mod_data[post2005 == TRUE & sum_hazard == 0, .N, c("Region", "Group", "Year")], freq_skeleton.1, by = c("Region", "Group", "Year"), all.y = TRUE)
-data_nil.1[,N := ifelse(is.na(N), 0, N)]
-
-nil.fit.nb <- fitdist(data_nil$N, "nbinom", method = "mme" )
-plot(nil.fit.nb)
-nil.fit.nb$aic
-nil.fit.nb$bic
-
-# exp scores better
-nil.fit.exp <- fitdist(data_nil$N, "exp", method = "mme" )
-plot(nil.fit.exp)
-nil.fit.exp$aic
-nil.fit.exp$bic
-
-nil_glm <-glm.nb(N ~ Region + Group, data = data_nil)
-summary(nil_glm)
-nil_results <- predict(nil_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-nil_results <- cbind(data_nil, "fit_freq" = nil_results$fit, "fit_freq_se" = nil_results$se.fit)
-nil_results_summ <- unique(nil_results[,.(Region, Group, fit_freq, fit_freq_se)])[order(Region, Group)]
-
-# write.xlsx(nil_results_summ,
-#            file.path(data_dir, "freq_sev_results.xlsx"),
-#            sheetName = "nil_freq")
-
-
 #########################################
 
 #### Predict avg prop damage of events for each split, by region ####
@@ -778,9 +740,9 @@ nil_results_summ <- unique(nil_results[,.(Region, Group, fit_freq, fit_freq_se)]
 event_names2 <- paste0("event_", sub(" ", "_", event_names))
 colSums(haz_mod_data[,..event_names2])
 
-# should we not insure for fogs, landslides? Only 1 event
-# Severe storms and thunder storms exactly correlated. Thunder storms removed
-# Hurricanes and tropical storms exactly correlated. Tropical storms removed
+# Only 1 event for fogs, landslides
+# Severe storms and thunder storms exactly correlated.
+# Hurricanes and tropical storms exactly correlated.
 # Only hurricanes and tropical storms have significantly non-0 correlation with sum_hazard
 event_names2_sh <- c(event_names2, "sum_hazard", "Quarter")
 correlation <- cor(haz_mod_data[,..event_names2_sh])
@@ -808,30 +770,6 @@ sev_results_summ <- unique(sev_results[,.(Region, Group, trans_point_est, trans_
                            by = c("Region", "Group", "trans_point_est", "trans_lower_bound", "trans_upper_bound"))[order(Region, Group)]
 
 
-# Severity glm - pareto - 1 parameter distribution
-# library("gpdFit")
-# data_sev <- haz_mod_data[sum_hazard > 0,]
-# sev_glm <- gamlss(sum_hazard ~ Region + Group, family = PARETO, data = data_sev)
-# summary(sev_glm)
-#
-# sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-# sev_results <- cbind(data_sev, "fit_sev" = exp(sev_results$fit), "fit_sev_se" = exp(sev_results$se.fit))
-# sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
-
-# Severity glm - weibull
-# data_sev <- haz_mod_data[sum_hazard > 0,]
-# sev_glm <- gamlss(sum_hazard ~ Region + Group, family = WEI, data = data_sev)
-# summary(sev_glm)
-#
-# sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-# sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
-# sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
-
-# write.xlsx(sev_results_summ,
-#            file.path(data_dir, "freq_sev_results.xlsx"),
-#            sheetName = "sev")
-
-
 # Export results
 wb <- createWorkbook()
 addWorksheet(wb, "tot_freq")
@@ -845,31 +783,116 @@ saveWorkbook(wb, file = file.path(data_dir, "freq_sev_results.xlsx"), overwrite 
 
 #########################################
 
+#########################################
+
 #### Confidence analysis - for solvency ####
 # Simulate variables - frequency
-print(freq_glm)
-freq_sim <- rbind(rnbinom(10000))
-# I'm lost here
-# Not sure how to retrieve nbinom parameters from the gamlss we've fitted
+# Use sample mean of number of events across region and group for mu 
+library(dplyr)
+data_freq_mu <- combined_data_freq %>%
+  group_by(Region, Group) %>%
+  summarise(mean_value = mean(N))
+
+# Define hazard categories 
+regions <- unique(data_freq_mu$Region)
+groups <- unique(data_freq_mu$Group)
+
+# Create data frame to store results 
+mu_freq <- data.frame(region = rep(regions, each = length(groups)),
+                      group = rep(groups, length(regions)),
+                      mu = rep(NA, length(regions) * length(groups)))
+
+# Input values for 'mu' and 'theta' into data frame
+mu_freq$mu <- data_freq_mu$mean_value
 
 
-# Simulate variables - severity
-print(sev_glm)
-sev_glm$mu.coefficients
-sev_glm$sigma.coefficients
-# I think this process is right
+# Set seed for reproducibility
+set.seed(20)
 
-sev_sim <- c()
+# Simulate values
+nsim <- 10000
+i=1
+freq_sim <- t(sapply(1:nrow(mu_freq), function(i)  rnbinom(nsim, mu = mu_freq$mu[i], size = freq_glm$theta)))
+freq_sim <- data.frame(freq_sim)
+colnames(freq_sim) <- paste0("sim_", 1:ncol(freq_sim))
+
+# Combine simulated values with existing dataframe
+freq_sim_combined <- cbind(mu_freq, freq_sim)
+freq_sim_combined
+
+# SEVERITY SIMULATION - Amanda
+# Set up data frame
+regions <- 1:6
+groups <- c(unique(data_sev$Group))
+set.seed(20) # for reproducibility
+
 mu_int <- sev_glm$mu.coefficients[1]
-mu_groups <- as.data.table(cbind("medium" = sev_glm$mu.coefficients[7],"minor" = sev_glm$mu.coefficients[8]))
-for (reg in c("1","2","3","4","5","6")) {
-  if (reg == "1") { mu_coeff <- mu_int }
-  else { mu_coeff <- sev_glm$mu.coefficients[reg] + mu_int}
-  for (group in splits) {
-    #insert case statement to get mu_coeff_group = mu_coeff + group coeff
-    sev_sim <- rbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients)
+mu_groups <- as.data.table(cbind("medium" = sev_glm$mu.coefficients[7], "minor" = sev_glm$mu.coefficients[8]))
+# Create data frame
+mu_coeff <- data.frame(region = rep(regions, each = length(groups)),
+                       group = rep(groups, length(regions)),
+                       coeff = rep(NA, length(regions) * length(groups)))
+coeff <- c()
+i = 1
+for (i in 1:nrow(mu_coeff)){
+  reg <- mu_coeff$region[i]
+  group <- mu_coeff$group[i]
+  if (reg == 1) {
+    mu_int_reg <- mu_int
+  } else {
+    mu_int_reg <- sev_glm$mu.coefficients[reg] + mu_int
+  }
+  if (group == "major") {
+    coeff[i] <- mu_int_reg
+  } else {
+    group_num <- match(group, groups) - 1
+    coeff[i] <- mu_int + mu_groups[[group_num]]
   }
 }
 
 
 
+=======
+mu_coeff$coeff <- coeff
+
+#simulate
+nsim <- 10000
+mu_coeff_sim <- t(sapply(1:nrow(mu_coeff), function(i)  rLOGNO(nsim, mu = mu_coeff$coeff[i], sigma = sev_glm$sigma.coefficients)))
+mu_coeff_sim <- data.frame(mu_coeff_sim)
+colnames(mu_coeff_sim) <- paste0("sim_", 1:ncol(mu_coeff_sim))
+
+mu_coeff_sim
+# Combine simulated values with original data frame
+mu_coeff_combined <- cbind(mu_coeff, mu_coeff_sim)
+
+########## Combine Severity and Frequency Models #########################
+# Add additional costs (home and contents)
+material_labour <- 0.35
+contents <- 0.58
+THC_2021 <- 1298835945
+proportion <- 0.5
+mu_coeff_sim_inf <- mu_coeff_sim*(1+contents)+ mu_coeff_sim*(1+contents+material_labour)*proportion
+# Multiply severity and frequency simulations to obtain total cost
+combined_sim <- mu_coeff_sim_inf*freq_sim
+freq_sim
+# Sum columns to obtain total cost for Storlysia across all regions and groups
+combined_sim <- colSums(combined_sim)
+# Import program reduction (hardcoded from excel 2020 figures)
+reduction <- 1-0.38731162 
+
+# Reduce based on program 
+combined_sim_red <- (combined_sim +THC_2021)*reduction 
+
+# Import GDP data
+gdp <- read.xlsx(file.path(data_dir, "Projection of Economic Costs FINAL.xlsx"),
+                 sheet = "% of GDP - Voluntary",
+                 rows = 8, cols = 2:53)
+gdp_10percent <- gdp*0.1
+
+# Determine confidence intervals
+solvency_99.5 <- quantile(combined_sim_red, 0.995)
+solvency_85 <- quantile(combined_sim_red, 0.85)
+a<- solvency_99.5 - mean(combined_sim_red)
+b <- solvency_85 - mean(combined_sim_red)
+a 
+b
