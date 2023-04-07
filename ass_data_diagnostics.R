@@ -30,8 +30,6 @@ exc_rate <- 1.321
 
 #### Data read ####
 
-#Waddah note: change working directory on mac, then remove "file.path(data_dir,)", and keep everything else the same
-
 hazard <- read.xlsx(file.path(data_dir, "2023-student-research-hazard-event-data.xlsx"),
                     sheet = "Hazard Data",
                     rows = 13:3379, cols = 2:9)
@@ -192,358 +190,9 @@ haz_mod_data[, sum_hazard := prop_dam_inf]
 haz_mod_data$post2005 <- 0
 haz_mod_data[Year >= 2005, post2005 := 1]
 
+#### Property damage severity distribution fitting ####
 
 #### Major Data - distribution fitting
-MajorHazard <- subset(haz_mod_data, Group == "major" & Property.Damage > 0)
-plotdist(MajorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
-
-MajHaz.Sev.ln <- fitdist(MajorHazard$prop_dam_inf, "lnorm", method = "mse") #not the best but a better fit
-MajHaz.Sev.nb <- fitdist(MajorHazard$prop_dam_inf, "nbinom", method = "mme") #very bad fit
-MajHaz.Sev.exp <- fitdist(MajorHazard$prop_dam_inf, "exp", method = "mme") #very bad fit
-MajHaz.Sev.gamma <- fitdist(MajorHazard$prop_dam_inf, "gamma", method = "mme") #not the best but a better fit
-MajHaz.Sev.pareto <- fitdist(MajorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) ## one of the better fits
-MajHaz.Sev.weibull <- fitdist(MajorHazard$prop_dam_inf, "weibull") #one of the better fits
-
-plot(MajHaz.Sev.ln)
-  ##plot(MajHaz.Sev.nb) #doesn't load LOL, do not use this code
-plot(MajHaz.Sev.exp)
-plot(MajHaz.Sev.gamma)
-plot(MajHaz.Sev.pareto)
-plot(MajHaz.Sev.weibull)
-
-        #graphical analysis
-par(mfrow = c(2,2))
-denscomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-cdfcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-qqcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-ppcomp(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-
-        #Goodness of Fit Test
-gofstat(list(MajHaz.Sev.ln, MajHaz.Sev.nb, MajHaz.Sev.exp, MajHaz.Sev.gamma, MajHaz.Sev.pareto, MajHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-
-#### Medium Data
-MediumHazard <- subset(haz_mod_data, Group == "medium" & Property.Damage > 0)
-plotdist(MediumHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
-
-MedHaz.Sev.ln <- fitdist(MediumHazard$prop_dam_inf, "lnorm", method = "mse")
-MedHaz.Sev.nb <- fitdist(MediumHazard$prop_dam_inf, "nbinom", method = "mme")
-MedHaz.Sev.exp <- fitdist(MediumHazard$prop_dam_inf, "exp", method = "mme")
-MedHaz.Sev.gamma <- fitdist(MediumHazard$prop_dam_inf, "gamma", method = "mme")
-MedHaz.Sev.pareto <- fitdist(MediumHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500)) # best fit graphically
-MedHaz.Sev.weibull <- fitdist(MediumHazard$prop_dam_inf, "weibull") #one of the better fits
-
-plot(MedHaz.Sev.ln)
-  ##plot(MedHaz.Sev.nb) #doesn't load LOL, do not use this code
-plot(MedHaz.Sev.exp)
-plot(MedHaz.Sev.gamma)
-plot(MedHaz.Sev.pareto)
-plot(MedHaz.Sev.weibull)
-
-        #graphical analysis
-par(mfrow = c(2,2))
-denscomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-cdfcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-qqcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-ppcomp(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-
-        #Goodness of Fit Test
-gofstat(list(MedHaz.Sev.ln, MedHaz.Sev.nb, MedHaz.Sev.exp, MedHaz.Sev.gamma, MedHaz.Sev.pareto, MedHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-
-#### Minor Data
-MinorHazard <- subset(haz_mod_data, Group == "minor" & Property.Damage > 0)
-plotdist(MinorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
-
-MinHaz.Sev.ln <- fitdist(MinorHazard$prop_dam_inf, "lnorm", method = "mse")
-MinHaz.Sev.nb <- fitdist(MinorHazard$prop_dam_inf, "nbinom", method = "mme")
-MinHaz.Sev.exp <- fitdist(MinorHazard$prop_dam_inf, "exp", method = "mme")
-MinHaz.Sev.gamma <- fitdist(MinorHazard$prop_dam_inf, "gamma", method = "mme")
-MinHaz.Sev.pareto <- fitdist(MinorHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500))
-MinHaz.Sev.weibull <- fitdist(MinorHazard$prop_dam_inf, "weibull")
-
-plot(MinHaz.Sev.ln)
-  ##plot(MinHaz.Sev.nb) #doesn't load LOL, do not use this code
-plot(MinHaz.Sev.exp)
-plot(MinHaz.Sev.gamma)
-plot(MinHaz.Sev.pareto)
-plot(MinHaz.Sev.weibull) #seems strongest
-
-        #graphical analysis
-par(mfrow = c(2,2))
-denscomp(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-cdfcomp(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-qqcomp(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-ppcomp(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-
-        #Goodness of Fit Test
-gofstat(list(MinHaz.Sev.ln, MinHaz.Sev.nb, MinHaz.Sev.exp, MinHaz.Sev.gamma, MinHaz.Sev.pareto, MinHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-
-####Full Data (no split)
-
-AllHazard <- subset(haz_mod_data,Property.Damage > 0)
-
-
-AllHaz.Sev.ln <- fitdist(AllHazard$prop_dam_inf, "lnorm", method = "mse")
-AllHaz.Sev.nb <- fitdist(AllHazard$prop_dam_inf, "nbinom", method = "mme")
-AllHaz.Sev.exp <- fitdist(AllHazard$prop_dam_inf, "exp", method = "mme")
-AllHaz.Sev.gamma <- fitdist(AllHazard$prop_dam_inf, "gamma", method = "mme")
-AllHaz.Sev.pareto <- fitdist(AllHazard$prop_dam_inf, "pareto",start = list(shape=1, scale = 500))
-AllHaz.Sev.weibull <- fitdist(AllHazard$prop_dam_inf, "weibull")
-
-        #graphical analysis
-par(mfrow = c(2,2))
-denscomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-cdfcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-qqcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-ppcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), legendtext = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-
-        #Goodness of Fit Test
-gofstat(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
-
-
-#### Diagnostic graphs for frequency/severity fits ####
-# Graphs of sum_hazard by split, by region
-plot_list <- list()
-for (reg in c("1","2","3","4","5","6")) {
-  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = sum_hazard)) +
-    geom_histogram() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    ggtitle(paste0("Region ",reg))
-
-  for (ind in c(1,2,3)) {
-    split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = sum_hazard)) +
-      geom_histogram() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-      ggtitle(paste0("Region ",reg," - ", split))
-  }
-
-  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
-}
-
-# Graphs of sum_hazard by split, by region, by year
-plot_list <- list()
-for (reg in c("1","2","3","4","5","6")) {
-  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = Year, y = sum_hazard)) +
-    geom_col() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    ggtitle(paste0("Region ",reg))
-
-  for (ind in c(1,2,3)) {
-    split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = sum_hazard)) +
-      geom_col() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-      ggtitle(paste0("Region ",reg," - ", split))
-  }
-
-  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
-}
-
-# Average sum_hazard by yq
-haz_mod_data[, avg_sum_hazard_q := mean(sum_hazard), by = c("yq", "Region")]
-haz_mod_data[, avg_sum_hazard_y := mean(sum_hazard), by = c("Year", "Region")]
-
-haz_mod_data[, avg_sum_hazard_qg := mean(sum_hazard), by = c("yq", "Region", "Group")]
-haz_mod_data[, avg_sum_hazard_yg := mean(sum_hazard), by = c("Year", "Region", "Group")]
-
-# Column graph of avg_sum_hazard by year, by region
-plot_list <- list()
-for (reg in c("1","2","3","4","5","6")) {
-  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = Year, y = avg_sum_hazard_q)) +
-    geom_col() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    ggtitle(paste0("Region ",reg))
-
-  for (ind in c(1,2,3)) {
-    split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = avg_sum_hazard_qg)) +
-      geom_col() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-      ggtitle(paste0("Region ",reg," - ", split))
-  }
-
-  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
-}
-
-# Below 2 sets of graphs evaluate suitability of gamma/uniform distribution
-# Histogram of avg_sum_hazard by year, by region
-plot_list <- list()
-for (reg in c("1","2","3","4","5","6")) {
-  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = avg_sum_hazard_y)) +
-    geom_histogram() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    ggtitle(paste0("Region ",reg))
-
-  for (ind in c(1,2,3)) {
-    split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = avg_sum_hazard_yg)) +
-      geom_histogram() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-      ggtitle(paste0("Region ",reg," - ", split))
-  }
-
-  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
-}
-
-# Histogram of avg_sum_hazard by quarter, by region
-plot_list <- list()
-for (reg in c("1","2","3","4","5","6")) {
-  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = avg_sum_hazard_q)) +
-    geom_histogram() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    ggtitle(paste0("Region ",reg))
-
-  for (ind in c(1,2,3)) {
-    split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = avg_sum_hazard_qg)) +
-      geom_histogram() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-      ggtitle(paste0("Region ",reg," - ", split))
-  }
-
-  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
-}
-
-# Graphs of sum_hazard by split, by region
-plot_list <- list()
-for (reg in c("1","2","3","4","5","6")) {
-  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = sum_hazard)) +
-    geom_histogram() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    ggtitle(paste0("Region ",reg))
-
-  for (ind in c(1,2,3)) {
-    split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = sum_hazard)) +
-      geom_histogram() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-      ggtitle(paste0("Region ",reg," - ", split))
-  }
-
-  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
-}
-
-# Graphs of sum_hazard by split, by region, by year
-plot_list <- list()
-for (reg in c("1","2","3","4","5","6")) {
-  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = Year, y = sum_hazard)) +
-    geom_col() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    ggtitle(paste0("Region ",reg))
-
-  for (ind in c(1,2,3)) {
-    split <- splits[ind]
-    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = sum_hazard)) +
-      geom_col() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-      ggtitle(paste0("Region ",reg," - ", split))
-  }
-
-  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
-}
-
-
-
-
-#### Frequency - distribution fitting ####
-# GOF Test for ALL
-gofstat(list(freq.fit.exp, freq.fit.nb), fitnames = c("exponential","negative binomial"))
-# filter for major medium and minor
-major_hazard_mod_data <- haz_mod_data[Group == 'major',]
-major_data_freq <- merge(major_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
-major_data_freq[,N := ifelse(is.na(N), 0, N)]
-major_data_freq.1 <- merge(major_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
-major_data_freq.1[,N := ifelse(is.na(N), 0, N)]
-
-medium_hazard_mod_data <- haz_mod_data[Group == 'medium',]
-medium_data_freq <- merge(medium_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
-medium_data_freq[,N := ifelse(is.na(N), 0, N)]
-medium_data_freq.1 <- merge(medium_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
-medium_data_freq.1[,N := ifelse(is.na(N), 0, N)]
-
-minor_hazard_mod_data <- haz_mod_data[Group == 'minor',]
-minor_data_freq <- merge(minor_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
-minor_data_freq[,N := ifelse(is.na(N), 0, N)]
-minor_data_freq.1 <- merge(minor_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
-minor_data_freq.1[,N := ifelse(is.na(N), 0, N)]
-
-#exp
-major.freq.fit.exp <- fitdist(major_data_freq$N, "exp", method = "mme")
-summary(major.freq.fit.exp)
-plot(major.freq.fit.exp)
-
-major.freq.fit.exp.1 <- fitdist(major_data_freq.1$N, "exp", method = "mme")
-plot(major.freq.fit.exp.1)
-summary(major.freq.fit.exp.1)
-
-medium.freq.fit.exp <- fitdist(medium_data_freq$N, "exp", method = "mme")
-summary(medium.freq.fit.exp)
-plot(medium.freq.fit.exp)
-
-medium.freq.fit.exp.1 <- fitdist(medium_data_freq.1$N, "exp", method = "mme")
-plot(medium.freq.fit.exp.1)
-summary(medium.freq.fit.exp.1)
-
-minor.freq.fit.exp <- fitdist(minor_data_freq$N, "exp", method = "mme")
-summary(minor.freq.fit.exp)
-plot(minor.freq.fit.exp)
-
-minor.freq.fit.exp.1 <- fitdist(minor_data_freq.1$N, "exp", method = "mme")
-plot(minor.freq.fit.exp.1)
-summary(minor.freq.fit.exp.1)
-
-#nb
-major.freq.fit.nb <- fitdist(major_data_freq$N, "nbinom", method = "mme")
-summary(major.freq.fit.nb)
-plot(major.freq.fit.nb)
-major.prob.0 <- major.freq.fit.nb$estimate[1]/(major.freq.fit.nb$estimate[1] + major.freq.fit.nb$estimate[2])
-
-major.freq.fit.nb.1 <- fitdist(major_data_freq.1$N, "nbinom", method = "mme")
-summary(major.freq.fit.nb.1)
-plot(major.freq.fit.nb.1)
-major.prob.1 <- major.freq.fit.nb.1$estimate[1]/(major.freq.fit.nb.1$estimate[1] + major.freq.fit.nb.1$estimate[2])
-
-medium.freq.fit.nb <- fitdist(medium_data_freq$N, "nbinom", method = "mme")
-summary(medium.freq.fit.nb)
-plot(medium.freq.fit.nb)
-medium.prob.0 <- medium.freq.fit.nb$estimate[1]/(medium.freq.fit.nb$estimate[1] + medium.freq.fit.nb$estimate[2])
-
-medium.freq.fit.nb.1 <- fitdist(medium_data_freq.1$N, "nbinom", method = "mme")
-plot(medium.freq.fit.nb.1)
-medium.prob.1 <- medium.freq.fit.nb.1$estimate[1]/(medium.freq.fit.nb.1$estimate[1] + medium.freq.fit.nb.1$estimate[2])
-
-minor.freq.fit.nb <- fitdist(minor_data_freq$N, "nbinom", method = "mme")
-summary(minor.freq.fit.nb)
-plot(minor.freq.fit.nb)
-minor.prob.0 <- minor.freq.fit.nb$estimate[1]/(minor.freq.fit.nb$estimate[1] + minor.freq.fit.nb$estimate[2])
-
-minor.freq.fit.nb.1 <- fitdist(minor_data_freq.1$N, "nbinom", method = "mme")
-plot(minor.freq.fit.nb.1)
-minor.prob.1 <- minor.freq.fit.nb.1$estimate[1]/(minor.freq.fit.nb.1$estimate[1] + minor.freq.fit.nb.1$estimate[2])
-
-#GOF Test major
-gofstat(list(major.freq.fit.exp, major.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
-
-#GOF Test medium
-gofstat(list(medium.freq.fit.exp, medium.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
-
-#GOF Test minor
-gofstat(list(minor.freq.fit.exp, minor.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
-
-# nb for all
-freq.fit.nb <- fitdist(data_freq$N, "nbinom", method = "mme")
-plot(freq.fit.nb)
-freq.fit.nb$aic
-freq.fit.nb$bic
-prob.0 <- freq.fit.nb$estimate[1]/(freq.fit.nb$estimate[1] + freq.fit.nb$estimate[2])
-
-freq.fit.nb.1 <- fitdist(data_freq.1$N, "nbinom", method = "mme")
-plot(freq.fit.nb.1)
-freq.fit.nb.1$aic
-freq.fit.nb.1$bic
-prob.1 <- freq.fit.nb.1$estimate[1]/(freq.fit.nb.1$estimate[1] + freq.fit.nb.1$estimate[2])
-
-#### Severity - distribution fitting ####
 MajorHazard <- subset(haz_mod_data, Group == "major" & Property.Damage > 0)
 plotdist(MajorHazard$prop_dam_inf, histo = TRUE, demp = TRUE)
 
@@ -648,6 +297,255 @@ ppcomp(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllH
 
 #Goodness of Fit Test
 gofstat(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, AllHaz.Sev.pareto, AllHaz.Sev.weibull), fitnames = c("lognormal", "negative binomial", "exponential", "gamma", "pareto", "weibull"))
+
+#### Property damage frequency distribution fitting ####
+# GOF Test for ALL
+gofstat(list(freq.fit.exp, freq.fit.nb), fitnames = c("exponential","negative binomial"))
+# filter for major medium and minor
+major_hazard_mod_data <- haz_mod_data[Group == 'major',]
+major_data_freq <- merge(major_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
+major_data_freq[,N := ifelse(is.na(N), 0, N)]
+major_data_freq.1 <- merge(major_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
+major_data_freq.1[,N := ifelse(is.na(N), 0, N)]
+
+medium_hazard_mod_data <- haz_mod_data[Group == 'medium',]
+medium_data_freq <- merge(medium_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
+medium_data_freq[,N := ifelse(is.na(N), 0, N)]
+medium_data_freq.1 <- merge(medium_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
+medium_data_freq.1[,N := ifelse(is.na(N), 0, N)]
+
+minor_hazard_mod_data <- haz_mod_data[Group == 'minor',]
+minor_data_freq <- merge(minor_hazard_mod_data[sum_hazard > 0, .N, Year], data.table("Year" = seq(1960,2020,1)), by = c("Year"), all.y = TRUE)
+minor_data_freq[,N := ifelse(is.na(N), 0, N)]
+minor_data_freq.1 <- merge(minor_hazard_mod_data[post2005 == TRUE & sum_hazard > 0, .N, Year], data.table("Year" = seq(2006,2020,1)), by = c("Year"), all.y = TRUE)
+minor_data_freq.1[,N := ifelse(is.na(N), 0, N)]
+
+#exp
+major.freq.fit.exp <- fitdist(major_data_freq$N, "exp", method = "mme")
+summary(major.freq.fit.exp)
+plot(major.freq.fit.exp)
+
+major.freq.fit.exp.1 <- fitdist(major_data_freq.1$N, "exp", method = "mme")
+plot(major.freq.fit.exp.1)
+summary(major.freq.fit.exp.1)
+
+medium.freq.fit.exp <- fitdist(medium_data_freq$N, "exp", method = "mme")
+summary(medium.freq.fit.exp)
+plot(medium.freq.fit.exp)
+
+medium.freq.fit.exp.1 <- fitdist(medium_data_freq.1$N, "exp", method = "mme")
+plot(medium.freq.fit.exp.1)
+summary(medium.freq.fit.exp.1)
+
+minor.freq.fit.exp <- fitdist(minor_data_freq$N, "exp", method = "mme")
+summary(minor.freq.fit.exp)
+plot(minor.freq.fit.exp)
+
+minor.freq.fit.exp.1 <- fitdist(minor_data_freq.1$N, "exp", method = "mme")
+plot(minor.freq.fit.exp.1)
+summary(minor.freq.fit.exp.1)
+
+#nb
+major.freq.fit.nb <- fitdist(major_data_freq$N, "nbinom", method = "mme")
+summary(major.freq.fit.nb)
+plot(major.freq.fit.nb)
+major.prob.0 <- major.freq.fit.nb$estimate[1]/(major.freq.fit.nb$estimate[1] + major.freq.fit.nb$estimate[2])
+
+major.freq.fit.nb.1 <- fitdist(major_data_freq.1$N, "nbinom", method = "mme")
+summary(major.freq.fit.nb.1)
+plot(major.freq.fit.nb.1)
+major.prob.1 <- major.freq.fit.nb.1$estimate[1]/(major.freq.fit.nb.1$estimate[1] + major.freq.fit.nb.1$estimate[2])
+
+medium.freq.fit.nb <- fitdist(medium_data_freq$N, "nbinom", method = "mme")
+summary(medium.freq.fit.nb)
+plot(medium.freq.fit.nb)
+medium.prob.0 <- medium.freq.fit.nb$estimate[1]/(medium.freq.fit.nb$estimate[1] + medium.freq.fit.nb$estimate[2])
+
+medium.freq.fit.nb.1 <- fitdist(medium_data_freq.1$N, "nbinom", method = "mme")
+plot(medium.freq.fit.nb.1)
+medium.prob.1 <- medium.freq.fit.nb.1$estimate[1]/(medium.freq.fit.nb.1$estimate[1] + medium.freq.fit.nb.1$estimate[2])
+
+minor.freq.fit.nb <- fitdist(minor_data_freq$N, "nbinom", method = "mme")
+summary(minor.freq.fit.nb)
+plot(minor.freq.fit.nb)
+minor.prob.0 <- minor.freq.fit.nb$estimate[1]/(minor.freq.fit.nb$estimate[1] + minor.freq.fit.nb$estimate[2])
+
+minor.freq.fit.nb.1 <- fitdist(minor_data_freq.1$N, "nbinom", method = "mme")
+plot(minor.freq.fit.nb.1)
+minor.prob.1 <- minor.freq.fit.nb.1$estimate[1]/(minor.freq.fit.nb.1$estimate[1] + minor.freq.fit.nb.1$estimate[2])
+
+#GOF Test major
+gofstat(list(major.freq.fit.exp, major.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
+
+#GOF Test medium
+gofstat(list(medium.freq.fit.exp, medium.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
+
+#GOF Test minor
+gofstat(list(minor.freq.fit.exp, minor.freq.fit.nb), fitnames = c("exponential", "negative binomial"))
+
+# nb for all
+freq.fit.nb <- fitdist(data_freq$N, "nbinom", method = "mme")
+plot(freq.fit.nb)
+freq.fit.nb$aic
+freq.fit.nb$bic
+prob.0 <- freq.fit.nb$estimate[1]/(freq.fit.nb$estimate[1] + freq.fit.nb$estimate[2])
+
+freq.fit.nb.1 <- fitdist(data_freq.1$N, "nbinom", method = "mme")
+plot(freq.fit.nb.1)
+freq.fit.nb.1$aic
+freq.fit.nb.1$bic
+prob.1 <- freq.fit.nb.1$estimate[1]/(freq.fit.nb.1$estimate[1] + freq.fit.nb.1$estimate[2])
+
+
+
+
+
+
+#### Additional diagnostic graphs for frequency/severity fits ####
+# Histograms of sum_hazard by split, by region
+plot_list <- list()
+for (reg in c("1","2","3","4","5","6")) {
+  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = sum_hazard)) +
+    geom_histogram() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggtitle(paste0("Region ",reg))
+
+  for (ind in c(1,2,3)) {
+    split <- splits[ind]
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = sum_hazard)) +
+      geom_histogram() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      ggtitle(paste0("Region ",reg," - ", split))
+  }
+
+  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
+}
+
+# Histograms of sum_hazard by split, by region, by year
+plot_list <- list()
+for (reg in c("1","2","3","4","5","6")) {
+  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = Year, y = sum_hazard)) +
+    geom_col() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggtitle(paste0("Region ",reg))
+
+  for (ind in c(1,2,3)) {
+    split <- splits[ind]
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = sum_hazard)) +
+      geom_col() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      ggtitle(paste0("Region ",reg," - ", split))
+  }
+
+  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
+}
+
+# Average sum_hazard by yq and year
+haz_mod_data[, avg_sum_hazard_q := mean(sum_hazard), by = c("yq", "Region")]
+haz_mod_data[, avg_sum_hazard_y := mean(sum_hazard), by = c("Year", "Region")]
+
+haz_mod_data[, avg_sum_hazard_qg := mean(sum_hazard), by = c("yq", "Region", "Group")]
+haz_mod_data[, avg_sum_hazard_yg := mean(sum_hazard), by = c("Year", "Region", "Group")]
+
+# Column graph of avg_sum_hazard by quarter, by region
+# Note - evaluation by quarters introduces seasonality
+plot_list <- list()
+for (reg in c("1","2","3","4","5","6")) {
+  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = Year, y = avg_sum_hazard_q)) +
+    geom_col() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggtitle(paste0("Region ",reg))
+
+  for (ind in c(1,2,3)) {
+    split <- splits[ind]
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = avg_sum_hazard_qg)) +
+      geom_col() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      ggtitle(paste0("Region ",reg," - ", split))
+  }
+
+  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
+}
+
+# Column graphs of sum_hazard by split, by region, by year
+plot_list <- list()
+for (reg in c("1","2","3","4","5","6")) {
+  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = Year, y = sum_hazard)) +
+    geom_col() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggtitle(paste0("Region ",reg))
+
+  for (ind in c(1,2,3)) {
+    split <- splits[ind]
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = Year, y = sum_hazard)) +
+      geom_col() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      ggtitle(paste0("Region ",reg," - ", split))
+  }
+
+  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
+}
+
+
+
+# Histogram of avg_sum_hazard by year, by region and split
+plot_list <- list()
+for (reg in c("1","2","3","4","5","6")) {
+  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = avg_sum_hazard_y)) +
+    geom_histogram() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggtitle(paste0("Region ",reg))
+
+  for (ind in c(1,2,3)) {
+    split <- splits[ind]
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = avg_sum_hazard_yg)) +
+      geom_histogram() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      ggtitle(paste0("Region ",reg," - ", split))
+  }
+
+  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
+}
+
+# Histogram of avg_sum_hazard by quarter, by region
+plot_list <- list()
+for (reg in c("1","2","3","4","5","6")) {
+  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = avg_sum_hazard_q)) +
+    geom_histogram() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggtitle(paste0("Region ",reg))
+
+  for (ind in c(1,2,3)) {
+    split <- splits[ind]
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = avg_sum_hazard_qg)) +
+      geom_histogram() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      ggtitle(paste0("Region ",reg," - ", split))
+  }
+
+  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
+}
+
+# Graphs of sum_hazard by split, by region
+plot_list <- list()
+for (reg in c("1","2","3","4","5","6")) {
+  plot_list[[1]] <- ggplot(haz_mod_data[Region == reg,], aes(x = sum_hazard)) +
+    geom_histogram() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggtitle(paste0("Region ",reg))
+
+  for (ind in c(1,2,3)) {
+    split <- splits[ind]
+    plot_list[[ind + 1]] <- ggplot(haz_mod_data[Region == reg & Group == split,], aes(x = sum_hazard)) +
+      geom_histogram() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      ggtitle(paste0("Region ",reg," - ", split))
+  }
+
+  grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]], plot_list[[4]], ncol = 4)
+}
+
+
 
 #########################################
 #### Predict number of events for each split, by region ####
@@ -787,17 +685,17 @@ saveWorkbook(wb, file = file.path(data_dir, "freq_sev_results.xlsx"), overwrite 
 
 #### Confidence analysis - for solvency ####
 # Simulate variables - frequency
-# Use sample mean of number of events across region and group for mu 
+# Use sample mean of number of events across region and group for mu
 library(dplyr)
 data_freq_mu <- combined_data_freq %>%
   group_by(Region, Group) %>%
   summarise(mean_value = mean(N))
 
-# Define hazard categories 
+# Define hazard categories
 regions <- unique(data_freq_mu$Region)
 groups <- unique(data_freq_mu$Group)
 
-# Create data frame to store results 
+# Create data frame to store results
 mu_freq <- data.frame(region = rep(regions, each = length(groups)),
                       group = rep(groups, length(regions)),
                       mu = rep(NA, length(regions) * length(groups)))
@@ -875,10 +773,10 @@ freq_sim
 # Sum columns to obtain total cost for Storlysia across all regions and groups
 combined_sim <- colSums(combined_sim)
 # Import program reduction (hardcoded from excel 2020 figures)
-reduction <- 1-0.38731162 
+reduction <- 1-0.38731162
 
-# Reduce based on program 
-combined_sim_red <- (combined_sim +THC_2021)*reduction 
+# Reduce based on program
+combined_sim_red <- (combined_sim +THC_2021)*reduction
 
 # Import GDP data
 gdp <- read.xlsx(file.path(data_dir, "Projection of Economic Costs FINAL.xlsx"),
@@ -891,5 +789,5 @@ solvency_99.5 <- quantile(combined_sim_red, 0.995)
 solvency_85 <- quantile(combined_sim_red, 0.85)
 a<- solvency_99.5 - mean(combined_sim_red)
 b <- solvency_85 - mean(combined_sim_red)
-a 
+a
 b
