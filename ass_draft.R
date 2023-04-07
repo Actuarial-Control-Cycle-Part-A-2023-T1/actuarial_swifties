@@ -652,8 +652,8 @@ gofstat(list(AllHaz.Sev.ln, AllHaz.Sev.nb, AllHaz.Sev.exp, AllHaz.Sev.gamma, All
 #########################################
 #### Predict number of events for each split, by region ####
 # Check existing trends in notifications by split
-## why the ~ 0 claims ~ Year 2000?
-## why the jump in claims in the recent 20 years?
+## why are there ~ 0 claims ~ Year 2000?
+## why is there a jump in claims in the recent 20 years?
 ## edit to definition of regions may explain reduction in region 1 notifications and sudden hike in other region notifications
 
 # Frequency plots by year, by region and mmm group
@@ -715,15 +715,6 @@ colnames(freq_skeleton.1) <- c("Region", "Group", "Year")
 data_freq_groups.1 <- merge(haz_mod_data[post2005 == TRUE & sum_hazard > 0, .N, c("Region", "Group", "Year")], freq_skeleton.1, by = c("Region", "Group", "Year"), all.y = TRUE)
 data_freq_groups.1[,N := ifelse(is.na(N), 0, N)]
 
-# Frequency glm
-# freq_glm_major <-gamlss(N ~ Region, family = NBI, data = data_freq_groups.1[Group == "major"])
-# summary(freq_glm_major)
-#
-# freq_glm_medium <-gamlss(N ~ Region, family = NBI, data = data_freq_groups[Group == "medium"])
-# summary(freq_glm_medium)
-#
-# freq_glm_major <-gamlss(N ~ Region, family = NBI, data = data_freq_groups[Group == "minor"])
-# summary(freq_glm_minor)
 
 combined_data_freq <- rbind(data_freq_groups.1[Group == "major"],
                             data_freq_groups[Group == "medium"],
@@ -741,35 +732,6 @@ freq_results_summ <- unique(freq_results[,.(Region, Group, fit_freq, fit_freq_se
 #            file.path(data_dir, "freq_sev_results.xlsx"),
 #            sheetName = "tot_freq")
 
-
-# Similar distribution for nil claims
-data_nil <- merge(haz_mod_data[sum_hazard == 0, .N, c("Region", "Group", "Year")], freq_skeleton, by = c("Region", "Group", "Year"), all.y = TRUE)
-data_nil[,N := ifelse(is.na(N), 0, N)]
-data_nil.1 <- merge(haz_mod_data[post2005 == TRUE & sum_hazard == 0, .N, c("Region", "Group", "Year")], freq_skeleton.1, by = c("Region", "Group", "Year"), all.y = TRUE)
-data_nil.1[,N := ifelse(is.na(N), 0, N)]
-
-nil.fit.nb <- fitdist(data_nil$N, "nbinom", method = "mme" )
-plot(nil.fit.nb)
-nil.fit.nb$aic
-nil.fit.nb$bic
-
-# exp scores better
-nil.fit.exp <- fitdist(data_nil$N, "exp", method = "mme" )
-plot(nil.fit.exp)
-nil.fit.exp$aic
-nil.fit.exp$bic
-
-nil_glm <-glm.nb(N ~ Region + Group, data = data_nil)
-summary(nil_glm)
-nil_results <- predict(nil_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-nil_results <- cbind(data_nil, "fit_freq" = nil_results$fit, "fit_freq_se" = nil_results$se.fit)
-nil_results_summ <- unique(nil_results[,.(Region, Group, fit_freq, fit_freq_se)])[order(Region, Group)]
-
-# write.xlsx(nil_results_summ,
-#            file.path(data_dir, "freq_sev_results.xlsx"),
-#            sheetName = "nil_freq")
-
-
 #########################################
 
 #### Predict avg prop damage of events for each split, by region ####
@@ -778,9 +740,9 @@ nil_results_summ <- unique(nil_results[,.(Region, Group, fit_freq, fit_freq_se)]
 event_names2 <- paste0("event_", sub(" ", "_", event_names))
 colSums(haz_mod_data[,..event_names2])
 
-# should we not insure for fogs, landslides? Only 1 event
-# Severe storms and thunder storms exactly correlated. Thunder storms removed
-# Hurricanes and tropical storms exactly correlated. Tropical storms removed
+# Only 1 event for fogs, landslides
+# Severe storms and thunder storms exactly correlated.
+# Hurricanes and tropical storms exactly correlated.
 # Only hurricanes and tropical storms have significantly non-0 correlation with sum_hazard
 event_names2_sh <- c(event_names2, "sum_hazard", "Quarter")
 correlation <- cor(haz_mod_data[,..event_names2_sh])
@@ -806,30 +768,6 @@ sev_results[,`:=`(trans_point_est = exp(point_est),
 
 sev_results_summ <- unique(sev_results[,.(Region, Group, trans_point_est, trans_lower_bound, trans_upper_bound)],
                            by = c("Region", "Group", "trans_point_est", "trans_lower_bound", "trans_upper_bound"))[order(Region, Group)]
-
-
-# Severity glm - pareto - 1 parameter distribution
-# library("gpdFit")
-# data_sev <- haz_mod_data[sum_hazard > 0,]
-# sev_glm <- gamlss(sum_hazard ~ Region + Group, family = PARETO, data = data_sev)
-# summary(sev_glm)
-#
-# sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-# sev_results <- cbind(data_sev, "fit_sev" = exp(sev_results$fit), "fit_sev_se" = exp(sev_results$se.fit))
-# sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
-
-# Severity glm - weibull
-# data_sev <- haz_mod_data[sum_hazard > 0,]
-# sev_glm <- gamlss(sum_hazard ~ Region + Group, family = WEI, data = data_sev)
-# summary(sev_glm)
-#
-# sev_results <- predict(sev_glm,type = "response", se.fit = TRUE) #se.fit = TRUE is not supported for new data values at the moment
-# sev_results <- cbind(data_sev, "fit_sev" = sev_results$fit, "fit_sev_se" = sev_results$se.fit)
-# sev_results_summ <- sev_results[,.(avg_sev_fit = mean(fit_sev)), by = c("Region", "Group")][order(Region, Group)]
-
-# write.xlsx(sev_results_summ,
-#            file.path(data_dir, "freq_sev_results.xlsx"),
-#            sheetName = "sev")
 
 
 # Export results
@@ -880,44 +818,7 @@ colnames(freq_sim) <- paste0("sim_", 1:ncol(freq_sim))
 
 # Combine simulated values with existing dataframe
 freq_sim_combined <- cbind(mu_freq, freq_sim)
-
-freq_sim
-######## Simulate variables - severity (DON'T USE) ##########################################################
-#print(sev_glm)
-#sev_glm$mu.coefficients
-#sev_glm$sigma.coefficients
-# I think this process is right
-
-# Initialize an empty vector to store the simulation results
-#sev_sim <- c()
-
-# Extract the intercept and group coefficients from the model
-#mu_int <- sev_glm$mu.coefficients[1]
-#mu_groups <- as.data.table(cbind("medium" = sev_glm$mu.coefficients[7], "minor" = sev_glm$mu.coefficients[8]))
-
-# Loop over each region and group combination
-#for (reg in c("1", "2", "3", "4", "5", "6")) {
-#  mu_int <- sev_glm$mu.coefficients[1]
-#  if (reg == "1") {
-#    # Use the intercept coefficient for the first region
-#    mu_coeff <- mu_int
-#  } else {
-#    # Add the region coefficient to the intercept for subsequent regions
-#    mu_coeff <- sev_glm$mu.coefficients[reg] + mu_int
-#  }
-
-# for (group in unique(data_sev$Group)) {
-#    if (group == "major") {
-#      # Use the current value of mu_coeff for the "major" group
-#      mu_coeff_group <- mu_coeff
-#    } else {
-# Add the appropriate group coefficient to mu_coeff for other groups
-#      mu_coeff_group <- mu_coeff + mu_groups[group]
-#    }
-#    sim_results <- cbind(reg, group, rLOGNO(10000, mu = mu_coeff_group, sigma = sev_glm$sigma.coefficients))
-#    sev_sim <- cbind(sev_sim,sim_results)
-#  }
-#}
+freq_sim_combined
 
 # SEVERITY SIMULATION - Amanda
 # Set up data frame
