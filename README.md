@@ -185,6 +185,8 @@ Provided below are our projections for the economic costs of the program, expres
 
 Figure 1. Costs to Storslysia of hazard events from 2020 to 2050, as a proportion of GDP. Costs without the program in this period are below 10% of GDP. Our recommended program improves on costs to Storslysia, although our sensitivities show returns on greater upfront investment to relocation that may increase costs to Storslysia as a proportion of GDP in the short term but produce greater savings in the long term.
 
+> INSERT GRAPH
+
 We assume that as people move out of their riskier regions, they are able to sell to people moving from even riskier regions or in the case of Region 2 -- the reduction of the population in 2 will be driven by people choosing not to rebuild as they face hazard events over time.
 
 ### Solvency
