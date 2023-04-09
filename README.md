@@ -1,8 +1,3 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
 
 # 2023 ACTL4001 SOA CHALLENGE RELOCATION SOCIAL INSURANCE SCHEME
 
@@ -189,8 +184,6 @@ Temporary housing costs are only provided for 6 months, instead of a year, to al
 Provided below are our projections for the economic costs of the program, expressed as a percentage of Storslysia's GDP. Costs with the program are much lower in the long run than without the program in the long run, as reflected in the following graph (more graphs in Appendix 4).
 
 Figure 1. Costs to Storslysia of hazard events from 2020 to 2050, as a proportion of GDP. Costs without the program in this period are below 10% of GDP. Our recommended program improves on costs to Storslysia, although our sensitivities show returns on greater upfront investment to relocation that may increase costs to Storslysia as a proportion of GDP in the short term but produce greater savings in the long term.
-
-![Figure 1](CostsOfStorslysiaGraph.png)
 
 We assume that as people move out of their riskier regions, they are able to sell to people moving from even riskier regions or in the case of Region 2 -- the reduction of the population in 2 will be driven by people choosing not to rebuild as they face hazard events over time.
 
