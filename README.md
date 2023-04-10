@@ -298,7 +298,6 @@ All in all, it is of the essence to consider the nature of the ethical considera
 
 This report outlines Swift's Social Insurance Program design to help Storslysia incentivise voluntary relocation to reduce costs due to climate-related events. Through careful analysis and modelling, we have produced results which satisfy requirements of the addition of a program reducing costs and cost of program being less than 10% of GDP. Risks, sensitivities and limitations of the program and process have been considered and Swift highly recommends further research and ongoing frequent monitoring of the proposed program.
 
-> CHECK IF APPENDIX IS NEEDED
 
 ## References
 
