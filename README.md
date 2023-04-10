@@ -182,7 +182,6 @@ For the purposes of this project, it was assumed that 50% of damages are associa
 Provided below are our projections for economic costs without the program, expressed as a percentage of Storslysia's GDP.
 <p align="center">
   <img width="548" alt="image" src="https://user-images.githubusercontent.com/126951584/230843782-38b3abb0-362c-4e5a-8e72-c9c587f7dc02.png">
-</p>
 
 ### Economic costs with program
 
@@ -195,14 +194,25 @@ To project the economic costs of the program, it was necessary to consider three
 3.  The cost of rebuilding for those who choose to remain in their property.
 
 To model voluntary relocation costs, we assume an impact of the discount (3%) on people's migration to project gradual migration over time, from faster rates at short terms to slower rates long terms where the discount will be re-evaluated/is uncertain.
-
-> INSERT FORMULAS
+```math 
+\begin{multline}
+\text{short-term migration (5 years)} = (1+ \text{discount})^{1/(5\cdot4)}
+\end{multline}
+```
+```math 
+\begin{multline}
+\text{short to long-term migration (25 years)} = (1+ \text{discount})^{1/(25\cdot2)}
+\end{multline}
+```
 
 The change in population density over short and long terms across regions using these migration rates are assumed to impact average hazard severity. Each exiting or entering person reduces or increases the average hazard severity by a factor of the existing average hazard severity of the region. We also inflate the new average hazard severity over time. The cost of voluntary relocation to the program each year is the product of voluntary relocation each year and average property costs in the new region.
 
 To model additional involuntary relocation costs with discounts, above the 5% and 20% of the population affected by general and major hazard events, we first assume an impact of the discount (1%) on people's additional migration to less risky regions under the program.
-
-> INSERT FORMULAS
+```math 
+\begin{multline}
+\text{Migration after a hazard event} = (5\%*n_{general} + 20\%*n_{major})\cdot(1+\text{discount})^{1/4}
+\end{multline}
+```
 
 After executing this split, the same formulae as "without program" is used to model involuntary relocation costs.
 
@@ -211,12 +221,9 @@ Temporary housing costs are only provided for 6 months, instead of a year, to al
 Provided below are our projections for the economic costs of the program, expressed as a percentage of Storslysia's GDP. Costs with the program are much lower in the long run than without the program in the long run, as reflected in the following graph (more graphs in Appendix 4).
 
 Figure 1. Costs to Storslysia of hazard events from 2020 to 2050, as a proportion of GDP. Costs without the program in this period are below 10% of GDP. Our recommended program improves on costs to Storslysia, although our sensitivities show returns on greater upfront investment to relocation that may increase costs to Storslysia as a proportion of GDP in the short term but produce greater savings in the long term.
-
-> INSERT GRAPH
 <p align="center">
-  
-<\p>
-  
+<img width="548" alt="image" src="https://user-images.githubusercontent.com/108808920/230888848-059d37e9-1c21-4f2c-a281-93b241ae4101.png">  
+
 We assume that as people move out of their riskier regions, they are able to sell to people moving from even riskier regions or in the case of Region 2 -- the reduction of the population in 2 will be driven by people choosing not to rebuild as they face hazard events over time.
 
 ### Solvency
@@ -228,10 +235,8 @@ We determine that the economic capital required to maintain the program in the f
 ### Contrast costs associated with voluntary and emergency displacement
 
 Provided below are the voluntary versus involuntary costs of the program, expressed as a percentage of Storslysia's GDP. As can be seen, voluntary costs are consistently lower than involuntary costs across the short-term and long-term. Voluntary costs are also assumed to remain constant across all SSP scenarios, whereas involuntary costs are assumed to vary. For the voluntary versus involuntary costs as a percentage of GDP at time points 2020, 2025 (short-term) and 2050 (long-term), see Appendix 10.
-> INSERT GRAPH
 <p align="center">
-  
-<\p>
+  <img width="548" alt="image" src= "https://user-images.githubusercontent.com/108808920/230889320-954ddd8b-5be9-4bce-8748-c0b818a2498b.png">
   
 ## Risks and Risk Mitigation
 
@@ -266,10 +271,10 @@ There are cultural and socio-economic factors that may lead to low voluntary rel
 #### Projected costs deviate from actual experience
 
 Due to the uncertainty surrounding climate risk, the SSP projections for frequency may deviate from actual experience. This affects the projected costs of the program, which may also be affected by policy decisions or initiatives surrounding climate change. Ongoing monitoring ensures that program projections are aligned with climate policies and targets adopted by the government.
-
+  
 ## Sensitivity Analysis
-
-> INSERT TABLE
+<p align="center">
+  <img width="548" alt="image" src= "https://user-images.githubusercontent.com/108808920/230891492-be410d1b-f17d-48a6-ac45-8b88ee64dafc.png">
 
 ## Data Limitations
 
