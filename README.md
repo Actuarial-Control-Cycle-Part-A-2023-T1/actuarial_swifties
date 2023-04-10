@@ -149,14 +149,25 @@ To project the economic costs without the program, it was necessary to consider 
 The provided sum of property damage data was split into its respective frequency and severity components. Furthermore, hazard events were grouped per region and per risk classification (minor, medium, major). These risks were classified based on the total sum of property damage incurred by event, but also other characteristics such as frequency of hazard event, average duration of event, total number of injuries and total number of fatalities. These components were all given various weightings from which a risk score and category was generated, as reflected in Appendix 7.
 
 The frequency and severity components were fitted to various distributions to determine the best fit. It was discovered that a negative binomial distribution was most suitable for modelling frequency and a lognormal distribution was most suitable for modelling severity (Appendix 5). A GLM was then fitted to the frequency and severity distributions, using the historic data provided to produce central estimates and error estimates of both frequency and severity by region and risk classification. The purpose of this was to smooth out the volatility of the hazard experience and create a more reliable estimate for 2020 hazard costs as opposed to its current anomalous results. After receiving the GLM outputs, the frequency outputs were fed into the provided Frequency Projection Model of Minor, Medium, and Major Hazard Events Per Year, as a Function of SSP Scenario. The severity outputs were projected out by region and by risk classification (minor, medium, major) and were inflated by inflation (assumed to be 2%). Finally, these projections were multiplied together to give the total sum of property damage, as per the following formula:
-
-> INSERT FORMULAS
-
+```math
+Total Sum of Property Damage = Severity of property damage x Inflation x Frequency of Property Damage
+```
+Of those affected, “n”, a proportion of them migrate to another region, which we call “involuntary relocation”. Their migration is spread evenly across the other regions. People who choose not to migrate to another region “rebuild”.
+```math
+Migration to other region after a hazard event = (5%⋅n_general+ 20%⋅n_major )⋅
+```
+To obtain the total economic costs without the program in both the short term (5 years) and long term (30 years), the following formulae was used:
+```math
+Costs for Rebuilding = Percentage of Claimants Choosing to Rebuild * Total Sum of Property Damage + Material and Labour Costs + Costs of Replacing Household Goods
+Costs for Involuntary Relocation = Percentage of Claimants Who Involuntary Relocate * Total Sum of Property Damage + Cost of Replacing Household Goods + Temporary Housing Costs + 1% Discount on New Property for Individuals that Relocate from a Higher to a Lower Risk Region
+Total Economic Costs = Costs for Rebuilding + Costs for Involuntary Relocation
+```
 For the purposes of this project, it was assumed that 50% of damages are associated with rebuilding costs and the remaining 50% with involuntary relocation costs. Temporary housing costs were calculated by projecting the inflated costs per person per year and multiplying this by the volume of people involuntarily relocating to a given region.
 
 Provided below are our projections for economic costs without the program, expressed as a percentage of Storslysia's GDP.
-
-> INSERT TABLE
+<p align="center">
+  <img width="548" alt="image" src="https://user-images.githubusercontent.com/126951584/230843782-38b3abb0-362c-4e5a-8e72-c9c587f7dc02.png">
+</p>
 
 ### Economic costs with program
 
