@@ -86,6 +86,8 @@ The following program design aims to balance the concerns of government, insurer
 Regions, ranked from lowest to highest risk (see method in Appendix 9)
 
 > INSERT TABLE
+<img width="366" alt="image" src="https://user-images.githubusercontent.com/126951584/230842421-8838f8b5-788b-4a9a-9be7-e4c2e8a20e13.png">
+
 
 ### Criteria a resident must satisfy to make a claim following a hazard event
 
