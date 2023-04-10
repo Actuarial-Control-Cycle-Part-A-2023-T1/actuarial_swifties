@@ -154,7 +154,7 @@ The frequency and severity components were fitted to various distributions to de
 ```
 Of those affected, “n”, a proportion of them migrate to another region, which we call “involuntary relocation”. Their migration is spread evenly across the other regions. People who choose not to migrate to another region “rebuild”.
 ```math
-\text{Migration to other region after a hazard event} = \(5\%*n_{general} + 20\%*n_{major} \)⋅
+\text{Migration to other region after a hazard event} = (5\%*n_{general} + 20\%*n_{major})⋅
 ```
 To obtain the total economic costs without the program in both the short term (5 years) and long term (30 years), the following formulae was used:
 ```math 
@@ -162,12 +162,18 @@ To obtain the total economic costs without the program in both the short term (5
 \text{Costs for Rebuilding} = \text{Percentage of Claimants Choosing to Rebuild} * \text{Total Sum of Property Damage}
 + \text{Material and Labour Costs}
 + \text{Costs of Replacing Household Goods} 
-
+\end{multline}
+```
+```math
+\begin{multline}
 \text{Costs for Involuntary Relocation} = \text{Percentage of Claimants Who Involuntary Relocate} * \text{Total Sum of Property Damage}
 + \text{Cost of Replacing Household Goods}
 + \text{Temporary Housing Costs} 
 + \text{1% Discount on New Property for Individuals that Relocate from a Higher to a Lower Risk Region}
-
+\end{multline}
+```
+```math
+\begin{multline}
 \text{Total Economic Costs} = \text{Costs for Rebuilding} + \text{Costs for Involuntary Relocation}
 \end{multline}
 ```
