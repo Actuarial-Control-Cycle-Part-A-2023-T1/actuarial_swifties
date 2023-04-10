@@ -150,17 +150,24 @@ The provided sum of property damage data was split into its respective frequency
 
 The frequency and severity components were fitted to various distributions to determine the best fit. It was discovered that a negative binomial distribution was most suitable for modelling frequency and a lognormal distribution was most suitable for modelling severity (Appendix 5). A GLM was then fitted to the frequency and severity distributions, using the historic data provided to produce central estimates and error estimates of both frequency and severity by region and risk classification. The purpose of this was to smooth out the volatility of the hazard experience and create a more reliable estimate for 2020 hazard costs as opposed to its current anomalous results. After receiving the GLM outputs, the frequency outputs were fed into the provided Frequency Projection Model of Minor, Medium, and Major Hazard Events Per Year, as a Function of SSP Scenario. The severity outputs were projected out by region and by risk classification (minor, medium, major) and were inflated by inflation (assumed to be 2%). Finally, these projections were multiplied together to give the total sum of property damage, as per the following formula:
 ```math
-Total Sum of Property Damage = Severity of property damage x Inflation x Frequency of Property Damage
+\text{Total Sum of Property Damage} = \text{Severity of property damage} * \text{Inflation} * \text{Frequency of Property Damage}
 ```
 Of those affected, “n”, a proportion of them migrate to another region, which we call “involuntary relocation”. Their migration is spread evenly across the other regions. People who choose not to migrate to another region “rebuild”.
 ```math
-Migration to other region after a hazard event = (5%⋅n_general+ 20%⋅n_major )⋅
+\text{Migration to other region after a hazard event} = \(5\%*n_{general} + 20\%*n_{major} \)⋅
 ```
 To obtain the total economic costs without the program in both the short term (5 years) and long term (30 years), the following formulae was used:
 ```math
-Costs for Rebuilding = Percentage of Claimants Choosing to Rebuild * Total Sum of Property Damage + Material and Labour Costs + Costs of Replacing Household Goods
-Costs for Involuntary Relocation = Percentage of Claimants Who Involuntary Relocate * Total Sum of Property Damage + Cost of Replacing Household Goods + Temporary Housing Costs + 1% Discount on New Property for Individuals that Relocate from a Higher to a Lower Risk Region
-Total Economic Costs = Costs for Rebuilding + Costs for Involuntary Relocation
+\text{Costs for Rebuilding} = \text{Percentage of Claimants Choosing to Rebuild} * \text{Total Sum of Property Damage}
++ \text{Material and Labour Costs}
++ \text{Costs of Replacing Household Goods}
+
+\text{Costs for Involuntary Relocation} = \text{Percentage of Claimants Who Involuntary Relocate} * \text{Total Sum of Property Damage} 
++ \text{Cost of Replacing Household Goods} 
++ \text{Temporary Housing Costs} 
++ \text{1% Discount on New Property for Individuals that Relocate from a Higher to a Lower Risk Region}
+
+\text{Total Economic Costs} = \text{Costs for Rebuilding} + \text{Costs for Involuntary Relocation}
 ```
 For the purposes of this project, it was assumed that 50% of damages are associated with rebuilding costs and the remaining 50% with involuntary relocation costs. Temporary housing costs were calculated by projecting the inflated costs per person per year and multiplying this by the volume of people involuntarily relocating to a given region.
 
@@ -197,8 +204,10 @@ Provided below are our projections for the economic costs of the program, expres
 
 Figure 1. Costs to Storslysia of hazard events from 2020 to 2050, as a proportion of GDP. Costs without the program in this period are below 10% of GDP. Our recommended program improves on costs to Storslysia, although our sensitivities show returns on greater upfront investment to relocation that may increase costs to Storslysia as a proportion of GDP in the short term but produce greater savings in the long term.
 
-> INSERT GRAPH
-
+<p align="center">
+![image](https://user-images.githubusercontent.com/126951584/230845485-0cc5244f-53fc-4566-8f69-b3e93c7cfac8.png)
+<\p>
+  
 We assume that as people move out of their riskier regions, they are able to sell to people moving from even riskier regions or in the case of Region 2 -- the reduction of the population in 2 will be driven by people choosing not to rebuild as they face hazard events over time.
 
 ### Solvency
@@ -210,9 +219,10 @@ We determine that the economic capital required to maintain the program in the f
 ### Contrast costs associated with voluntary and emergency displacement
 
 Provided below are the voluntary versus involuntary costs of the program, expressed as a percentage of Storslysia's GDP. As can be seen, voluntary costs are consistently lower than involuntary costs across the short-term and long-term. Voluntary costs are also assumed to remain constant across all SSP scenarios, whereas involuntary costs are assumed to vary. For the voluntary versus involuntary costs as a percentage of GDP at time points 2020, 2025 (short-term) and 2050 (long-term), see Appendix 10.
-
-> INSERT GRAPH
-
+<p align="center">
+![image](https://user-images.githubusercontent.com/126951584/230845512-d2dd1cd4-f0c7-4481-862a-fe16d9f09d2a.png)
+<\p>
+  
 ## Risks and Risk Mitigation
 
 Provided below is a summary of potential risks and unforeseen events that may have a material impact on the program and mitigation strategies for each. A full table of risks as well as a risk matrix score is provided in Appendix 7.
