@@ -84,10 +84,9 @@ Assumptions with most significant impacts on Economic Costs and Capital (Appendi
 The following program design aims to balance the concerns of government, insurers and residents of Storslysia. Its purpose is to reduce costs for Storslysia by net movement of residents to lower risk geographic regions which can be achieved via investing into encouraging resident voluntary relocation in anticipation of catastrophic events and involuntary relocation in response to catastrophic events.
 
 Regions, ranked from lowest to highest risk (see method in Appendix 9)
-
-> INSERT TABLE
-<img width="366" alt="image" src="https://user-images.githubusercontent.com/126951584/230842421-8838f8b5-788b-4a9a-9be7-e4c2e8a20e13.png">
-
+<p align="center">
+  <img width="615" alt="image" src="https://user-images.githubusercontent.com/126951584/230843170-70de2130-97b8-41dd-a9b4-76c38bcee928.png">
+</p>
 
 ### Criteria a resident must satisfy to make a claim following a hazard event
 
