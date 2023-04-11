@@ -165,10 +165,11 @@ To obtain the total economic costs without the program in both the short term (5
 \end{multline}
 ```
 ```math
-\begin{multline}
 \text{Costs for Involuntary Relocation} = \text{Percentage of Claimants Who Involuntary Relocate} * \text{Total Sum of Property Damage}
 + \text{Cost of Replacing Household Goods}
 + \text{Temporary Housing Costs} 
+```
+```math
 + \text{1% Discount on New Property for Individuals that Relocate from a Higher to a Lower Risk Region}
 \end{multline}
 ```
