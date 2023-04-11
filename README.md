@@ -170,7 +170,7 @@ To obtain the total economic costs without the program in both the short term (5
 + \text{Temporary Housing Costs} 
 ```
 ```math
-+ \text{1% Discount on New Property for Individuals that Relocate from a Higher to a Lower Risk Region}
++ \text{1\% Discount on New Property for Individuals that Relocate from a Higher to a Lower Risk Region}
 ```
 ```math
 \begin{multline}
